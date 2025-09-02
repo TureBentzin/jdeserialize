@@ -15,19 +15,33 @@
       system:
       let
         pkgs = import nixpkgs { inherit system; };
+        packages = [
+          pkgs.ant
+          pkgs.jdk17
+        ];
       in
       {
         devShells.default = pkgs.mkShell {
-          packages = with pkgs; [
-            ant
-            openjdk
-          ];
+          inherit packages;
         };
 
-        packages.default = pkgs.hello;
+        packages.default =
+          let
+            jre = pkgs.jre17_minimal;
+          in
+          pkgs.stdenv.mkDerivation {
+            pname = "jdeserialize";
+            version = "1.2";
+            src = ./jdeserialize;
+            buildInputs = [ jre ];
+            nativeBuildInputs = packages;
+            # installPhase = "";
+            # buildPhase = "";
+            # meta = {};
+          };
 
         apps.default = flake-utils.lib.mkApp {
-          drv = pkgs.hello;
+          drv = self.packages.${system}.default;
         };
       }
     );

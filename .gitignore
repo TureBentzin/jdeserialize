@@ -1,0 +1,7 @@
+*.swp
+*.class
+result
+build
+javadoc/
+*.jar
+.direnv/
