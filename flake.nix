@@ -35,8 +35,14 @@
             src = ./jdeserialize;
             buildInputs = [ jre ];
             nativeBuildInputs = packages;
-            # installPhase = "";
-            # buildPhase = "";
+            buildPhase = ''
+            ant
+            ant javadoc
+            '';
+            installPhase = ''
+            mkdir -p $out/lib
+            cp jdeserialize.jar $out/lib
+            '';
             # meta = {};
           };
 
