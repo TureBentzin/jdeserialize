@@ -12,6 +12,9 @@ build-jar:
     - cd jdeserialize
     - ant compile
     - ant build-jar # seperated for better failure logs
+  artifacts:
+    paths:
+      - jdeserialize/jdeserialize.jar
 
 javadoc:
   stage: build
@@ -20,6 +23,9 @@ javadoc:
   script:
     - cd jdeserialize
     - ant javadoc
+  artifacts:
+    paths:
+      - jdeserialize/javadoc
 
 deploy-job:
   stage: deploy
@@ -27,8 +33,13 @@ deploy-job:
     - shared
   script:
     - echo "Deploying jdeserialize..."
-    - mkdir artifacts/{javadoc,testcases}
+    - mkdir -p artifacts/{javadoc,testcases}
     - cp jdeserialize/jdeserialize.jar artifacts/
-    - cp -r jdeserialize/javadoc/ artifacts/javadoc/
+    - cp -r jdeserialize/javadoc/ artifacts/
     - cp jdeserialize/ORIGINAL-LICENSE.md artifacts/ORIGINAL-LICENSE.md
-    - cp jdeserialize/testcases artifacts/testcases/
+    - cp -r jdeserialize/testcases artifacts/
+  artifacts:
+    name: "jdeserializeFull"
+    paths:
+      - artifacts/*
+    
