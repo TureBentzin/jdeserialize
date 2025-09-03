@@ -18,6 +18,7 @@
         packages = [
           pkgs.ant
           pkgs.jdk17
+          pkgs.makeWrapper
         ];
       in
       {
@@ -33,7 +34,7 @@
             pname = "jdeserialize";
             version = "1.2";
             src = ./jdeserialize;
-            buildInputs = [ jre ];
+            buildInputs = [ ];
             nativeBuildInputs = packages;
             buildPhase = ''
             ant
@@ -46,6 +47,8 @@
             cp jdeserialize.jar $out/lib/
             cp -r javadoc $out/share/doc/jdeserialize/javadoc
             cp ORIGINAL-LICENSE.md $out/share/licenses/jdeserialize/
+
+            makeWrapper ${jre}/bin/java $out/bin/jdeserialize --add-flags "-jar $out/lib/jdeserialize.jar"
             '';
             # meta = {};
           };
