@@ -40,8 +40,12 @@
             ant javadoc
             '';
             installPhase = ''
-            mkdir -p $out/lib
-            cp jdeserialize.jar $out/lib
+            mkdir -p $out/{bin,lib}
+            mkdir -p $out/share/{doc,licenses}/jdeserialize/
+
+            cp jdeserialize.jar $out/lib/
+            cp -r javadoc $out/share/doc/jdeserialize/javadoc
+            cp ORIGINAL-LICENSE.md $out/share/licenses/jdeserialize/
             '';
             # meta = {};
           };
