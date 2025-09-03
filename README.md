@@ -99,6 +99,14 @@ cd jdeserialize
 nix build
 ```
 
+The flake supports the following architectures:
+
+- aarch64-darwin  
+- aarch64-linux  
+- x86_64-darwin  
+- x86_64-linux (default)  
+
+
 This will produce a `result` symlink to a folder in your Nix store.
 
 If you want to build without Nix, you can simply run `ant` and `ant javadoc` in the `jdeserialize` subfolder of the repository.
