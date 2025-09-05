@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>Represents an array instance, including the values the comprise the array.  </p>
@@ -18,9 +16,9 @@ public class arrayobj extends contentbase {
     /**
      * Values of the array, in the order they were read from the stream.
      */
-    public arraycoll data;
+    public ObjectList data;
 
-    public arrayobj(int handle, classdesc cd, arraycoll data) {
+    public arrayobj(int handle, classdesc cd, ObjectList data) {
         super(contenttype.ARRAY);
         this.handle = handle;
         this.classdesc = cd;

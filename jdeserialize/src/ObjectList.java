@@ -1,5 +1,5 @@
 package org.unsynchronized;
-import java.io.*;
+import java.io.Serial;
 import java.util.*;
 
 /**
@@ -9,18 +9,19 @@ import java.util.*;
  * stored as an Integer.  To determine whether or not this is an array of ints or of
  * Integer instances, check the name in the arrayobj's class description.</p>
  */
-public class arraycoll extends ArrayList<Object> {
-    public static final long serialVersionUID = 2277356908919248L;
+public class ObjectList extends ArrayList<Object> {
+    @Serial
+    private static final long serialVersionUID = 2277356908919248L;
 
-    private fieldtype ftype;
+    private final fieldtype fieldType;
 
     /**
      * Constructor.
      * @param ft field type of the array
      */
-    public arraycoll(fieldtype ft) {
+    public ObjectList(fieldtype ft) {
         super();
-        this.ftype = ft;
+        this.fieldType = ft;
     }
 
     /**
@@ -29,11 +30,12 @@ public class arraycoll extends ArrayList<Object> {
      * @return the field type of the array
      */
     public fieldtype getFieldType() {
-        return ftype;
+        return fieldType;
     }
+
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("[arraycoll sz ").append(this.size());
+        sb.append("[ObjectList size=").append(this.size());
         boolean first = true;
         for(Object o: this) {
             if(first) {

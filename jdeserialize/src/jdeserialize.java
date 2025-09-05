@@ -626,10 +626,10 @@ public class jdeserialize {
         if(cd.name.length() < 2) {
             throw new IOException("invalid name in array classdesc: " + cd.name);
         }
-        arraycoll ac = read_arrayValues(cd.name.substring(1), dis);
+        ObjectList ac = read_arrayValues(cd.name.substring(1), dis);
         return new arrayobj(handle, cd, ac);
     }
-    public arraycoll read_arrayValues(String str, DataInputStream dis) throws IOException {
+    public ObjectList read_arrayValues(String str, DataInputStream dis) throws IOException {
         byte b = str.getBytes("UTF-8")[0];
         fieldtype ft = fieldtype.get(b);
         int size = dis.readInt();
@@ -637,7 +637,7 @@ public class jdeserialize {
             throw new IOException("invalid array size: " + size);
         }
 
-        arraycoll ac = new arraycoll(ft);
+        ObjectList ac = new ObjectList(ft);
         for(int i = 0; i < size; i++) {
             ac.add(read_FieldValue(ft, dis));
             continue;
