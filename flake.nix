@@ -17,7 +17,7 @@
         pkgs = import nixpkgs { inherit system; };
         packages = [
           pkgs.ant
-          pkgs.jdk17
+          pkgs.jdk21
           pkgs.makeWrapper
         ];
       in
@@ -28,11 +28,11 @@
 
         packages.default =
           let
-            jre = pkgs.jre17_minimal;
+            jre = pkgs.jre21_minimal;
           in
           pkgs.stdenv.mkDerivation {
             pname = "jdeserialize";
-            version = "1.2";
+            version = "2.0";
             src = ./jdeserialize;
             buildInputs = [ ];
             nativeBuildInputs = packages;
