@@ -1,5 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
 import java.util.*;
 
 /**
@@ -7,7 +6,7 @@ import java.util.*;
  * non-array class, including the non-transient field values, for all classes in its
  * hierarchy and inner classes.
  */
-public class instance extends contentbase {
+public class instance extends Content {
     /**
      * Collection of field data, organized by class description.  
      */
@@ -22,18 +21,18 @@ public class instance extends contentbase {
      * Constructor.
      */
     public instance() {
-        super(contenttype.INSTANCE);
+        super(ContentType.INSTANCE);
         this.fielddata = new HashMap<classdesc, Map<field, Object>>();
     }
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(classdesc.name).append(' ').append("_h").append(jdeserialize.hex(handle))
-            .append(" = r_").append(jdeserialize.hex(classdesc.handle)).append(";  ");
+        sb.append(classdesc.name).append(' ').append("_h").append(JDeserialize.hex(handle))
+            .append(" = r_").append(JDeserialize.hex(classdesc.handle)).append(";  ");
         //sb.append("// [instance " + jdeserialize.hex(handle) + ": " + jdeserialize.hex(classdesc.handle) + "/" + classdesc.name).append("]");
         return sb.toString();
     }
     /**
      * Object annotation data.
      */
-    public Map<classdesc, List<content>> annotations;
+    public Map<classdesc, List<IContent>> annotations;
 }

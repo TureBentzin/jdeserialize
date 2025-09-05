@@ -1,6 +1,5 @@
 package org.unsynchronized;
 import java.io.*;
-import java.util.*;
 
 /**
  * This class represents a field within a class description/declaration (classdesc).  It
@@ -11,7 +10,7 @@ public class field {
     /**
      * The type of the field.
      */
-    public fieldtype type;
+    public FieldType type;
 
     /**
      * The name of the field.
@@ -21,7 +20,7 @@ public class field {
     /**
      * The string object representing the class name.
      */
-    public stringobj classname; 
+    public StringObject classname;
 
     private boolean isInnerClassReference = false;
 
@@ -52,7 +51,7 @@ public class field {
      * @param name the field name
      * @param classname the class name
      */
-    public field(fieldtype type, String name, stringobj classname) throws ValidityException {
+    public field(FieldType type, String name, StringObject classname) throws ValidityException {
         this.type = type;
         this.name = name;
         this.classname = classname;
@@ -67,7 +66,7 @@ public class field {
      * @param type the field type
      * @param name the field name
      */
-    public field(fieldtype type, String name) throws ValidityException {
+    public field(FieldType type, String name) throws ValidityException {
         this(type, name, null);
     }
 
@@ -78,7 +77,7 @@ public class field {
      * @throws IOException if a validity or I/O error occurs
      */
     public String getJavaType() throws IOException {
-        return jdeserialize.resolveJavaType(this.type, this.classname == null ? null : this.classname.value, true, false);
+        return JDeserialize.resolveJavaType(this.type, this.classname == null ? null : this.classname.value, true, false);
     }
     
     /**
@@ -89,14 +88,14 @@ public class field {
      * validity error occurs
      */
     public void setReferenceTypeName(String newname) throws ValidityException {
-        if(this.type != fieldtype.OBJECT) {
+        if(this.type != FieldType.OBJECT) {
             throw new ValidityException("can't fix up a non-reference field!");
         }
         String nname = "L" + newname.replace('.', '/') + ";";
         this.classname.value = nname;
     }
     public void validate(String jt) throws ValidityException {
-        if(this.type == fieldtype.OBJECT) {
+        if(this.type == FieldType.OBJECT) {
             if(jt == null) {
                 throw new ValidityException("classname can't be null");
             }

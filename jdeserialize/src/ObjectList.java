@@ -13,13 +13,13 @@ public class ObjectList extends ArrayList<Object> {
     @Serial
     private static final long serialVersionUID = 2277356908919248L;
 
-    private final fieldtype fieldType;
+    private final FieldType fieldType;
 
     /**
      * Constructor.
      * @param ft field type of the array
      */
-    public ObjectList(fieldtype ft) {
+    public ObjectList(FieldType ft) {
         super();
         this.fieldType = ft;
     }
@@ -29,7 +29,7 @@ public class ObjectList extends ArrayList<Object> {
      *
      * @return the field type of the array
      */
-    public fieldtype getFieldType() {
+    public FieldType getFieldType() {
         return fieldType;
     }
 

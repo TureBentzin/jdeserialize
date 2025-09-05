@@ -1,13 +1,12 @@
 package org.unsynchronized;
 import java.io.*;
-import java.util.*;
 
 /**
  * Represents a serialized string object.  This is primarily used in serialized streams;
  * however, it is also used internally by other objects, since string objects have
  * handles as well.
  */
-public class stringobj extends contentbase {
+public class StringObject extends Content {
     public String value;
     private int readorthrow(ByteArrayInputStream bais) throws EOFException {
         int x = bais.read();
@@ -17,7 +16,7 @@ public class stringobj extends contentbase {
         return x;
     }
     public String toString() {
-        return "[String " + jdeserialize.hex(handle) + ": \"" + value + "\"]";
+        return "[String " + JDeserialize.hex(handle) + ": \"" + value + "\"]";
     }
     /**
      * Constructor.
@@ -26,8 +25,8 @@ public class stringobj extends contentbase {
      * @param data the bytes corresponding to the string 
      * @throws IOException if an I/O or validity error occurs
      */
-    public stringobj(int handle, byte[] data) throws IOException {
-        super(contenttype.STRING);
+    public StringObject(int handle, byte[] data) throws IOException {
+        super(ContentType.STRING);
         this.handle = handle;
         ByteArrayInputStream bais = new ByteArrayInputStream(data);
         StringBuffer sb = new StringBuffer();
@@ -63,7 +62,7 @@ public class stringobj extends contentbase {
                 int cp = ((ba & 0x1f) << 6) | (bb & 0x3f);
                 sb.append((char)cp);
             } else {
-                throw new IOException("invalid byte in modified utf-8 string: " + jdeserialize.hex(ba));
+                throw new IOException("invalid byte in modified utf-8 string: " + JDeserialize.hex(ba));
             }
         }
         this.value = sb.toString();

@@ -1,5 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
 
 /**
  * Represents an opaque block of data written to the stream.  Primarily, these are used to
@@ -7,7 +6,7 @@ import java.io.*;
  * inside an object, when the object overrides Serializable.writeObject().  Their
  * interpretation is hereby left to users.
  */
-public class blockdata extends contentbase {
+public class blockdata extends Content {
     /**
      * The block data read from the stream.
      */
@@ -19,10 +18,10 @@ public class blockdata extends contentbase {
      * @param buf the block data
      */
     public blockdata(byte[] buf) {
-        super(contenttype.BLOCKDATA);
+        super(ContentType.BLOCKDATA);
         this.buf = buf;
     }
     public String toString() {
-        return "[blockdata " + jdeserialize.hex(handle) + ": " + buf.length + " bytes]";
+        return "[blockdata " + JDeserialize.hex(handle) + ": " + buf.length + " bytes]";
     }
 }

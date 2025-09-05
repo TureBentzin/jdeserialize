@@ -18,7 +18,7 @@ import java.util.*;
  * classdesc as well.
  * </p>
  */
-public class classdesc extends contentbase {
+public class classdesc extends Content {
     /**
      * Type of the class being represented; either a normal class or a proxy class.
      */
@@ -55,7 +55,7 @@ public class classdesc extends contentbase {
      * the <pre>annotateClass(Class<?>)<pre> and <pre>annotateProxyClass(Class<?>)</pre> methods of an
      * ObjectOutputStream.  
      */
-    public List<content> annotations;
+    public List<IContent> annotations;
 
     /**
      * The superclass of the object, if available.
@@ -143,7 +143,7 @@ public class classdesc extends contentbase {
      * @param classtype the type of the class
      */
     public classdesc(classdesctype classtype) {
-        super(contenttype.CLASSDESC);
+        super(ContentType.CLASSDESC);
         this.classtype = classtype;
         this.enumconstants = new HashSet<String>();
         this.innerclasses = new ArrayList<classdesc>();
@@ -179,7 +179,7 @@ public class classdesc extends contentbase {
     }
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append("[cd ").append(jdeserialize.hex(handle)).append(": name ").append(name);
+        sb.append("[cd ").append(JDeserialize.hex(handle)).append(": name ").append(name);
         sb.append(" uid ").append(serialVersionUID);
         sb.append("]");
         return sb.toString();
@@ -195,7 +195,7 @@ public class classdesc extends contentbase {
     public void getHierarchy(ArrayList<classdesc> classes) {
         if(superclass != null) {
             if(superclass.classtype == classdesctype.PROXYCLASS) {
-                jdeserialize.debugerr("warning: hit a proxy class in superclass hierarchy");
+                JDeserialize.debugerr("warning: hit a proxy class in superclass hierarchy");
             } else {
                 superclass.getHierarchy(classes);
             }

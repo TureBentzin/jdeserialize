@@ -1,6 +1,5 @@
 package org.unsynchronized;
 import java.io.*;
-import java.util.*;
 
 /**
  * Exception used to signal that an exception object was successfully read from the 
@@ -8,12 +7,12 @@ import java.util.*;
  */
 public class ExceptionReadException extends IOException {
     public static final long serialVersionUID = 2277356908919221L;
-    public content exceptionobj;
+    public IContent exceptionobj;
     /**
      * Constructor.
      * @param c the serialized exception object that was read
      */
-    public ExceptionReadException(content c) {
+    public ExceptionReadException(IContent c) {
         super("serialized exception read during stream");
         this.exceptionobj = c;
     }
@@ -21,7 +20,7 @@ public class ExceptionReadException extends IOException {
      * Gets the Exception object that was thrown.
      * @return the content representing the serialized exception object
      */
-    public content getExceptionObject() {
+    public IContent getExceptionObject() {
         return exceptionobj;
     }
 }

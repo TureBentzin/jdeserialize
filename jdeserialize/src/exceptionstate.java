@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>
@@ -15,11 +13,11 @@ import java.util.*;
  * Specification.
  * </p>
  */
-public class exceptionstate extends contentbase {
+public class exceptionstate extends Content {
     /**
      * The serialized exception object.
      */
-    public content exceptionobj;
+    public IContent exceptionobj;
     
     /**
      * <p>
@@ -49,8 +47,8 @@ public class exceptionstate extends contentbase {
      * @param exobj the serialized exception object 
      * @param data the array of stream bytes that led up to the exception
      */
-    public exceptionstate(content exobj, byte[] data) {
-        super(contenttype.EXCEPTIONSTATE);
+    public exceptionstate(IContent exobj, byte[] data) {
+        super(ContentType.EXCEPTIONSTATE);
         this.exceptionobj = exobj;
         this.streamdata = data;
         this.handle = exobj.getHandle();
@@ -61,11 +59,11 @@ public class exceptionstate extends contentbase {
         if(streamdata.length > 0) {
             for(int i = 0; i < streamdata.length; i++) {
                 if((i % 16) == 0) {
-                    sb.append(jdeserialize.linesep).append(String.format("%7x: ", Integer.valueOf(i)));
+                    sb.append(JDeserialize.lineSeparator).append(String.format("%7x: ", Integer.valueOf(i)));
                 }
-                sb.append(" ").append(jdeserialize.hexnoprefix(streamdata[i]));
+                sb.append(" ").append(JDeserialize.hexnoprefix(streamdata[i]));
             }
-            sb.append(jdeserialize.linesep);
+            sb.append(JDeserialize.lineSeparator);
         }
         sb.append("]");
         return sb.toString();
