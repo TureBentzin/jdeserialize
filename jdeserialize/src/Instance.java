@@ -6,7 +6,7 @@ import java.util.*;
  * non-array class, including the non-transient field values, for all classes in its
  * hierarchy and inner classes.
  */
-public class instance extends Content {
+public class Instance extends Content {
     /**
      * Collection of field data, organized by class description.  
      */
@@ -20,7 +20,7 @@ public class instance extends Content {
     /**
      * Constructor.
      */
-    public instance() {
+    public Instance() {
         super(ContentType.INSTANCE);
         this.fielddata = new HashMap<classdesc, Map<field, Object>>();
     }

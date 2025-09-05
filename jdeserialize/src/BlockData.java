@@ -6,7 +6,7 @@ package org.unsynchronized;
  * inside an object, when the object overrides Serializable.writeObject().  Their
  * interpretation is hereby left to users.
  */
-public class blockdata extends Content {
+public class BlockData extends Content {
     /**
      * The block data read from the stream.
      */
@@ -17,7 +17,7 @@ public class blockdata extends Content {
      *
      * @param buf the block data
      */
-    public blockdata(byte[] buf) {
+    public BlockData(byte[] buf) {
         super(ContentType.BLOCKDATA);
         this.buf = buf;
     }

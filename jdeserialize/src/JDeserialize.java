@@ -163,7 +163,7 @@ public class JDeserialize implements Serializable {
         return INDENT.repeat(Math.max(0, level));
     }
 
-    public void readClassData(DataInputStream stream, instance inst) throws IOException {
+    public void readClassData(DataInputStream stream, Instance inst) throws IOException {
         ArrayList<classdesc> classes = new ArrayList<>();
         inst.classdesc.getHierarchy(classes);
         Map<classdesc, Map<field, Object>> allData = new HashMap<>();
@@ -224,7 +224,7 @@ public class JDeserialize implements Serializable {
                 if (fieldType == FieldType.ARRAY && stc != ObjectStreamConstants.TC_ARRAY) {
                     throw new IOException("array type listed, but typecode is not TC_ARRAY: " + hex(stc));
                 }
-                IContent c = read_Content(stc, stream, false);
+                IContent c = readContent(stc, stream, false);
                 if (c != null && c.isExceptionObject()) {
                     throw new ExceptionReadException(c);
                 }
@@ -287,7 +287,7 @@ public class JDeserialize implements Serializable {
                 reset();
                 continue;
             }
-            IContent c = read_Content(tc, stream, true);
+            IContent c = readContent(tc, stream, true);
             if (c != null && c.isExceptionObject()) {
                 throw new ExceptionReadException(c);
             }
@@ -295,7 +295,7 @@ public class JDeserialize implements Serializable {
         }
     }
 
-    public static void dump_Instance(instance inst, PrintStream ps) {
+    public static void dump_Instance(Instance inst, PrintStream ps) {
         StringBuffer sb = new StringBuffer();
         sb.append("[instance ").append(hex(inst.handle)).append(": ").append(hex(inst.classdesc.handle)).append("/").append(inst.classdesc.name);
         if (inst.annotations != null && !inst.annotations.isEmpty()) {
@@ -499,11 +499,11 @@ public class JDeserialize implements Serializable {
         if (tc == ObjectStreamConstants.TC_RESET) {
             throw new ValidityException("TC_RESET for object while reading exception: what should we do?");
         }
-        IContent c = read_Content(tc, stream, false);
+        IContent c = readContent(tc, stream, false);
         if (c == null) {
             throw new ValidityException("stream signaled for an exception, but exception object was null!");
         }
-        if (!(c instanceof instance)) {
+        if (!(c instanceof Instance)) {
             throw new ValidityException("stream signaled for an exception, but content is not an object!");
         }
         if (c.isExceptionObject()) {
@@ -516,7 +516,7 @@ public class JDeserialize implements Serializable {
 
     public classdesc readClassDesc(DataInputStream stream) throws IOException {
         byte tc = stream.readByte();
-        return handle_classDesc(tc, stream, false);
+        return handleClassDesc(tc, stream, false);
     }
 
     public classdesc readNewClassDesc(DataInputStream stream) throws IOException {
@@ -535,35 +535,34 @@ public class JDeserialize implements Serializable {
     }
 
     public classdesc handleNewClassDesc(byte tc, DataInputStream stream) throws IOException {
-        return handle_classDesc(tc, stream, true);
+        return handleClassDesc(tc, stream, true);
     }
 
-    public classdesc handle_classDesc(byte tc, DataInputStream stream, boolean mustBeNew) throws IOException {
+    public classdesc handleClassDesc(byte tc, DataInputStream stream, boolean mustBeNew) throws IOException {
         if (tc == ObjectStreamConstants.TC_CLASSDESC) {
             String name = stream.readUTF();
             long serialVersionUID = stream.readLong();
             int handle = newHandle();
             byte descflags = stream.readByte();
-            short nfields = stream.readShort();
-            if (nfields < 0) {
-                throw new IOException("invalid field count: " + nfields);
+            short fieldCount = stream.readShort();
+            if (fieldCount < 0) {
+                throw new IOException("invalid field count: " + fieldCount);
             }
-            field[] fields = new field[nfields];
-            for (short s = 0; s < nfields; s++) {
-                byte ftype = stream.readByte();
-                if (ftype == 'B' || ftype == 'C' || ftype == 'D'
-                        || ftype == 'F' || ftype == 'I' || ftype == 'J'
-                        || ftype == 'S' || ftype == 'Z') {
-                    String fieldname = stream.readUTF();
-                    fields[s] = new field(FieldType.get(ftype), fieldname);
-                } else if (ftype == '[' || ftype == 'L') {
-                    String fieldname = stream.readUTF();
+            field[] fields = new field[fieldCount];
+            for (short s = 0; s < fieldCount; s++) {
+                byte fieldType = stream.readByte();
+                if (fieldType == 'B' || fieldType == 'C' || fieldType == 'D'
+                        || fieldType == 'F' || fieldType == 'I' || fieldType == 'J'
+                        || fieldType == 'S' || fieldType == 'Z') {
+                    String fieldName = stream.readUTF();
+                    fields[s] = new field(FieldType.get(fieldType), fieldName);
+                } else if (fieldType == '[' || fieldType == 'L') {
+                    String fieldName = stream.readUTF();
                     byte stc = stream.readByte();
                     StringObject classname = readNewString(stc, stream);
-                    //String classname = stream.readUTF();
-                    fields[s] = new field(FieldType.get(ftype), fieldname, classname);
+                    fields[s] = new field(FieldType.get(fieldType), fieldName, classname);
                 } else {
-                    throw new IOException("invalid field type char: " + hex(ftype));
+                    throw new IOException("invalid field type char: " + hex(fieldType));
                 }
             }
             classdesc cd = new classdesc(classdesctype.NORMALCLASS);
@@ -624,23 +623,23 @@ public class JDeserialize implements Serializable {
         if (cd.name.length() < 2) {
             throw new IOException("invalid name in array classdesc: " + cd.name);
         }
-        ObjectList ac = read_arrayValues(cd.name.substring(1), stream);
+        ObjectList ac = readArrayValues(cd.name.substring(1), stream);
         return new arrayobj(handle, cd, ac);
     }
 
-    public ObjectList read_arrayValues(String str, DataInputStream stream) throws IOException {
-        byte b = str.getBytes(StandardCharsets.UTF_8)[0];
-        FieldType ft = FieldType.get(b);
+    public ObjectList readArrayValues(String string, DataInputStream stream) throws IOException {
+        byte firstByte = string.getBytes(StandardCharsets.UTF_8)[0];
+        FieldType type = FieldType.get(firstByte);
         int size = stream.readInt();
         if (size < 0) {
             throw new IOException("invalid array size: " + size);
         }
 
-        ObjectList ac = new ObjectList(ft);
+        ObjectList objects = new ObjectList(type);
         for (int i = 0; i < size; i++) {
-            ac.add(readFieldValue(ft, stream));
+            objects.add(readFieldValue(type, stream));
         }
-        return ac;
+        return objects;
     }
 
     public ClassObject readNewClass(DataInputStream stream) throws IOException {
@@ -703,7 +702,7 @@ public class JDeserialize implements Serializable {
         return sobj;
     }
 
-    public blockdata read_blockdata(byte tc, DataInputStream stream) throws IOException {
+    public BlockData readBlockdata(byte tc, DataInputStream stream) throws IOException {
         int size;
         if (tc == ObjectStreamConstants.TC_BLOCKDATA) {
             size = stream.readUnsignedByte();
@@ -715,23 +714,23 @@ public class JDeserialize implements Serializable {
         if (size < 0) {
             throw new IOException("invalid value for blockdata size: " + size);
         }
-        byte[] b = new byte[size];
-        stream.readFully(b);
+        byte[] data = new byte[size];
+        stream.readFully(data);
         debug("read blockdata of size " + size);
-        return new blockdata(b);
+        return new BlockData(data);
     }
 
-    public instance read_newObject(DataInputStream stream) throws IOException {
+    public Instance readNewObject(DataInputStream stream) throws IOException {
         classdesc cd = readClassDesc(stream);
         int handle = newHandle();
         debug("reading new object: handle " + hex(handle) + " classdesc " + cd.toString());
-        instance i = new instance();
-        i.classdesc = cd;
-        i.handle = handle;
-        setHandle(handle, i);
-        readClassData(stream, i);
+        Instance instance = new Instance();
+        instance.classdesc = cd;
+        instance.handle = handle;
+        setHandle(handle, instance);
+        readClassData(stream, instance);
         debug("done reading object for handle " + hex(handle));
-        return i;
+        return instance;
     }
 
     /**
@@ -751,43 +750,32 @@ public class JDeserialize implements Serializable {
      * @param tc the last byte read from the stream; it must be one of the TC_* values
      * within ObjectStreamConstants.*
      * @param stream the DataInputStream to read from
-     * @param blockdata whether or not to read TC_BLOCKDATA (this is the difference
+     * @param isBlockData whether or not to read TC_BLOCKDATA (this is the difference
      * between spec rules "object" and "content").
      * @return an object representing the last read item from the stream 
      * @throws IOException when a validity or I/O error occurs while reading
      */
-    public IContent read_Content(byte tc, DataInputStream stream, boolean blockdata) throws IOException {
+    public IContent readContent(byte tc, DataInputStream stream, boolean isBlockData) throws IOException {
         try {
-            switch (tc) {
-                case ObjectStreamConstants.TC_OBJECT:
-                    return read_newObject(stream);
-                case ObjectStreamConstants.TC_CLASS:
-                    return readNewClass(stream);
-                case ObjectStreamConstants.TC_ARRAY:
-                    return readNewArray(stream);
-                case ObjectStreamConstants.TC_STRING:
-                case ObjectStreamConstants.TC_LONGSTRING:
-                    return readNewString(tc, stream);
-                case ObjectStreamConstants.TC_ENUM:
-                    return readNewEnum(stream);
-                case ObjectStreamConstants.TC_CLASSDESC:
-                case ObjectStreamConstants.TC_PROXYCLASSDESC:
-                    return handleNewClassDesc(tc, stream);
-                case ObjectStreamConstants.TC_REFERENCE:
-                    return readPrevObject(stream);
-                case ObjectStreamConstants.TC_NULL:
-                    return null;
-                case ObjectStreamConstants.TC_EXCEPTION:
-                    return readException(stream);
-                case ObjectStreamConstants.TC_BLOCKDATA:
-                case ObjectStreamConstants.TC_BLOCKDATALONG:
-                    if (blockdata == false) {
-                        throw new IOException("got a blockdata TC_*, but not allowed here: " + hex(tc));
+            return switch (tc) {
+                case ObjectStreamConstants.TC_OBJECT -> readNewObject(stream);
+                case ObjectStreamConstants.TC_CLASS -> readNewClass(stream);
+                case ObjectStreamConstants.TC_ARRAY -> readNewArray(stream);
+                case ObjectStreamConstants.TC_STRING, ObjectStreamConstants.TC_LONGSTRING -> readNewString(tc, stream);
+                case ObjectStreamConstants.TC_ENUM -> readNewEnum(stream);
+                case ObjectStreamConstants.TC_CLASSDESC, ObjectStreamConstants.TC_PROXYCLASSDESC ->
+                        handleNewClassDesc(tc, stream);
+                case ObjectStreamConstants.TC_REFERENCE -> readPrevObject(stream);
+                case ObjectStreamConstants.TC_NULL -> null;
+                case ObjectStreamConstants.TC_EXCEPTION -> readException(stream);
+                case ObjectStreamConstants.TC_BLOCKDATA, ObjectStreamConstants.TC_BLOCKDATALONG -> {
+                    if (!isBlockData) {
+                        throw new IOException("got a isBlockData TC_*, but not allowed here: " + hex(tc));
                     }
-                    return read_blockdata(tc, stream);
-                default:
-                    throw new IOException("unknown content tc byte in stream: " + hex(tc));
-            }
+                    yield readBlockdata(tc, stream);
+                }
+                default -> throw new IOException("unknown content tc byte in stream: " + hex(tc));
+            };
         } catch (ExceptionReadException ere) {
             return ere.getExceptionObject();
         }
@@ -800,67 +788,49 @@ public class JDeserialize implements Serializable {
      * </p>
      *
      * <p>
-     * If shouldConnect is true, then jdeserialize will attempt to identify member classes
+     * If shouldConnect inputStream true, then jdeserialize will attempt to identify member classes
      * by their names according to the details laid out in the Inner Classes
      * Specification.  If it finds one, it will set the classdesc's flag indicating that
-     * it is an member class, and it will create a reference in its enclosing class.
+     * it inputStream an member class, and it will create a reference in its enclosing class.
      * </p>
      *
-     * @param is an open InputStream on a serialized stream of data
+     * @param inputStream an open InputStream on a serialized stream of data
      * @param shouldConnect true if jdeserialize should attempt to identify and connect
      * member classes with their enclosing classes
      *
      * Also see the <pre>connectMemberClasses</pre> method for more information on the 
      * member-class-detection algorithm.
      */
-    public void run(InputStream is, boolean shouldConnect) throws IOException {
-        LoggerInputStream lis = null;
-        DataInputStream stream = null;
-        try {
-            lis = new LoggerInputStream(is);
-            stream = new DataInputStream(lis);
-
+    public void run(InputStream inputStream, boolean shouldConnect) throws IOException {
+        try (LoggerInputStream loggerStream = new LoggerInputStream(inputStream); DataInputStream stream = new DataInputStream(loggerStream)) {
             short magic = stream.readShort();
             if (magic != ObjectStreamConstants.STREAM_MAGIC) {
                 throw new ValidityException("file magic mismatch!  expected " + ObjectStreamConstants.STREAM_MAGIC + ", got " + magic);
             }
-            short streamversion = stream.readShort();
-            if (streamversion != ObjectStreamConstants.STREAM_VERSION) {
-                throw new ValidityException("file version mismatch!  expected " + ObjectStreamConstants.STREAM_VERSION + ", got " + streamversion);
+            short streamVersion = stream.readShort();
+            if (streamVersion != ObjectStreamConstants.STREAM_VERSION) {
+                throw new ValidityException("file version mismatch!  expected " + ObjectStreamConstants.STREAM_VERSION + ", got " + streamVersion);
             }
             reset();
             IContent = new ArrayList<>();
             while (true) {
                 byte tc;
                 try {
-                    lis.record();
+                    loggerStream.record();
                     tc = stream.readByte();
                     if (tc == ObjectStreamConstants.TC_RESET) {
                         reset();
                         continue;
                     }
-                } catch (EOFException eoe) {
+                } catch (EOFException ignored) {
                     break;
                 }
-                IContent c = read_Content(tc, stream, true);
-                System.out.println("read: " + c.toString());
-                if (c != null && c.isExceptionObject()) {
-                    c = new exceptionstate(c, lis.getRecordedData());
+                IContent content = readContent(tc, stream, true);
+                System.out.println("read: " + content.toString());
+                if (content.isExceptionObject()) {
+                    content = new exceptionstate(content, loggerStream.getRecordedData());
                 }
-                IContent.add(c);
-            }
-        } finally {
-            if (stream != null) {
-                try {
-                    stream.close();
-                } catch (Exception ignore) {
-                }
-            }
-            if (lis != null) {
-                try {
-                    lis.close();
-                } catch (Exception ignore) {
-                }
+                IContent.add(content);
             }
         }
         for (IContent c : handles.values()) {
@@ -872,51 +842,48 @@ public class JDeserialize implements Serializable {
                 c.validate();
             }
         }
-        if (handles != null && handles.size() > 0) {
-            HashMap<Integer, IContent> hm = new HashMap<>();
-            hm.putAll(handles);
-            handleMaps.add(hm);
+        if (!handles.isEmpty()) {
+            handleMaps.add(new HashMap<>(handles));
         }
     }
 
     public void dump(Getopt go) throws IOException {
         if (go.hasOption("-blockdata") || go.hasOption("-blockdatamanifest")) {
-            List<String> bout = go.getArguments("-blockdata");
-            List<String> mout = go.getArguments("-blockdatamanifest");
-            FileOutputStream bos = null, mos = null;
-            PrintWriter pw = null;
+            List<String> blockData = go.getArguments("-blockdata");
+            List<String> blockDataManifest = go.getArguments("-blockdatamanifest");
+            FileOutputStream outputStream = null, mos = null;
+            PrintWriter writer = null;
             try {
-                if (bout != null && bout.size() > 0) {
-                    bos = new FileOutputStream(bout.get(0));
+                if (blockData != null && !blockData.isEmpty()) {
+                    outputStream = new FileOutputStream(blockData.getFirst());
                 }
-                if (mout != null && bout.size() > 0) {
-                    mos = new FileOutputStream(mout.get(0));
-                    pw = new PrintWriter(mos);
-                    pw.println("# Each line in this file that doesn't begin with a '#' contains the size of");
-                    pw.println("# an individual blockdata block written to the stream.");
+                if (blockDataManifest != null && !Objects.requireNonNull(blockData).isEmpty()) {
+                    mos = new FileOutputStream(blockDataManifest.getFirst());
+                    writer = new PrintWriter(mos);
+                    writer.println("# Each line in this file that doesn't begin with a '#' contains the size of");
+                    writer.println("# an individual blockdata block written to the stream.");
                 }
-                for (IContent c : IContent) {
-                    System.out.println(c.toString());
-                    if (c instanceof blockdata) {
-                        blockdata bd = (blockdata) c;
+                for (IContent content : IContent) {
+                    System.out.println(content.toString());
+                    if (content instanceof BlockData bd) {
                         if (mos != null) {
-                            pw.println(bd.buf.length);
+                            writer.println(bd.buf.length);
                         }
-                        if (bos != null) {
-                            bos.write(bd.buf);
+                        if (outputStream != null) {
+                            outputStream.write(bd.buf);
                         }
                     }
                 }
             } finally {
-                if (bos != null) {
+                if (outputStream != null) {
                     try {
-                        bos.close();
+                        outputStream.close();
                     } catch (IOException ignore) {
                     }
                 }
                 if (mos != null) {
                     try {
-                        pw.close();
+                        Objects.requireNonNull(writer).close();
                         mos.close();
                     } catch (IOException ignore) {
                     }
@@ -929,21 +896,20 @@ public class JDeserialize implements Serializable {
                 System.out.println(c.toString());
             }
             System.out.println("//// END stream content output");
-            System.out.println("");
+            System.out.println();
         }
 
         if (!go.hasOption("-noclasses")) {
-            boolean showarray = go.hasOption("-showarrays");
-            List<String> fpat = go.getArguments("-filter");
+            boolean showArray = go.hasOption("-showarrays");
+            List<String> filter = go.getArguments("-filter");
             System.out.println("//// BEGIN class declarations"
-                    + (showarray ? "" : " (excluding array classes)")
-                    + ((fpat != null && fpat.size() > 0)
-                    ? " (exclusion filter " + fpat.get(0) + ")"
+                    + (showArray ? "" : " (excluding array classes)")
+                    + ((filter != null && !filter.isEmpty())
+                    ? " (exclusion filter " + filter.getFirst() + ")"
                     : ""));
             for (IContent c : handles.values()) {
-                if (c instanceof classdesc) {
-                    classdesc cl = (classdesc) c;
-                    if (showarray == false && cl.isArrayClass()) {
+                if (c instanceof classdesc cl) {
+                    if (!showArray && cl.isArrayClass()) {
                         continue;
                     }
                     // Member classes will be streamplayed as part of their enclosing
@@ -951,26 +917,25 @@ public class JDeserialize implements Serializable {
                     if (cl.isStaticMemberClass() || cl.isInnerClass()) {
                         continue;
                     }
-                    if (fpat != null && fpat.size() > 0 && cl.name.matches(fpat.get(0))) {
+                    if (filter != null && !filter.isEmpty() && cl.name.matches(filter.getFirst())) {
                         continue;
                     }
                     dumpClassDesc(0, cl, System.out, go.hasOption("-fixnames"));
-                    System.out.println("");
+                    System.out.println();
                 }
             }
             System.out.println("//// END class declarations");
-            System.out.println("");
+            System.out.println();
         }
         if (!go.hasOption("-noinstances")) {
             System.out.println("//// BEGIN instance dump");
             for (IContent c : handles.values()) {
-                if (c instanceof instance) {
-                    instance i = (instance) c;
-                    dump_Instance(i, System.out);
+                if (c instanceof Instance instance) {
+                    dump_Instance(instance, System.out);
                 }
             }
             System.out.println("//// END instance dump");
-            System.out.println("");
+            System.out.println();
         }
     }
 
@@ -1015,7 +980,7 @@ public class JDeserialize implements Serializable {
      * @throws ValidityException if the found values don't correspond to spec
      */
     public void connectMemberClasses() throws IOException {
-        HashMap<classdesc, String> newnames = new HashMap<>();
+        HashMap<classdesc, String> newNames = new HashMap<>();
         HashMap<String, classdesc> classes = new HashMap<>();
         HashSet<String> classnames = new HashSet<>();
         for (IContent c : handles.values()) {
@@ -1057,7 +1022,7 @@ public class JDeserialize implements Serializable {
                 cd.setIsLocalInnerClass(islocal);
                 cd.setIsInnerClass(true);
                 f.setIsInnerClassReference(true);
-                newnames.put(cd, inner);
+                newNames.put(cd, inner);
             }
         }
         for (classdesc cd : classes.values()) {
@@ -1076,11 +1041,11 @@ public class JDeserialize implements Serializable {
             if (outercd != null) {
                 outercd.addInnerClass(cd);
                 cd.setIsStaticMemberClass(true);
-                newnames.put(cd, inner);
+                newNames.put(cd, inner);
             }
         }
-        for (classdesc ncd : newnames.keySet()) {
-            String newname = newnames.get(ncd);
+        for (classdesc ncd : newNames.keySet()) {
+            String newname = newNames.get(ncd);
             if (classnames.contains(newname)) {
                 throw new ValidityException("can't rename class from " + ncd.name + " to " + newname + " -- class already exists!");
             }
@@ -1181,7 +1146,7 @@ public class JDeserialize implements Serializable {
         List<String> fargs = go.getOtherArguments();
         if (fargs.isEmpty()) {
             debugerr("args: [options] file1 [file2 .. fileN]");
-            System.err.println("");
+            System.err.println();
             System.err.println(go.getDescriptionString());
             System.exit(1);
         }
