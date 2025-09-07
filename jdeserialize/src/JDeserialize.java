@@ -847,7 +847,7 @@ public class JDeserialize implements Serializable {
         }
     }
 
-    public void dump(Getopt go) throws IOException {
+    public void dump(OptionManager go) throws IOException {
         if (go.hasOption("-blockdata") || go.hasOption("-blockdatamanifest")) {
             List<String> blockData = go.getArguments("-blockdata");
             List<String> blockDataManifest = go.getArguments("-blockdatamanifest");
@@ -1120,7 +1120,7 @@ public class JDeserialize implements Serializable {
 
     public static void main(String[] args) {
         HashMap<String, Integer> options = new HashMap<>();
-        Getopt go = new Getopt();
+        OptionManager go = new OptionManager();
         go.addOption("-help", 0, "Show this list.");
         go.addOption("-debug", 0, "Write debug info generated during parsing to stdout.");
         go.addOption("-filter", 1, "Exclude classes that match the given String.matches() regex from class output.");
@@ -1134,7 +1134,7 @@ public class JDeserialize implements Serializable {
         go.addOption("-blockdatamanifest", 1, "Write blockdata manifest out to the specified file.");
         try {
             go.parse(args);
-        } catch (Getopt.OptionParseException ope) {
+        } catch (OptionManager.OptionParseException ope) {
             System.err.println("argument error: " + ope.getMessage());
             System.out.println(go.getDescriptionString());
             System.exit(1);
@@ -1143,7 +1143,7 @@ public class JDeserialize implements Serializable {
             System.out.println(go.getDescriptionString());
             System.exit(1);
         }
-        List<String> fargs = go.getOtherArguments();
+        List<String> fargs = go.getFileArguments();
         if (fargs.isEmpty()) {
             debugerr("args: [options] file1 [file2 .. fileN]");
             System.err.println();
