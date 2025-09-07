@@ -1,7 +1,6 @@
 package org.unsynchronized;
 
 import java.io.*;
-import java.util.*;
 
 /**
  * <p>

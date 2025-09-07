@@ -3,7 +3,7 @@
     <property name="src.dir" value="src" />
     <property name="javadoc.dir" value="javadoc" />
 
-    <target name="default" depends="compile, build-jar" />
+    <target name="default" depends="build-jar" />
 
     <target name="compile">
         <sequential>
@@ -14,7 +14,7 @@
         </sequential>
     </target>
 
-    <target name="build-jar">
+    <target name="build-jar" depends="compile">
         <jar destfile="jdeserialize.jar" filesetmanifest="mergewithoutmain">
             <fileset dir="${build.dir}" includes="**/*class" />
             <fileset dir="." includes="${src.dir}/**/*" />
