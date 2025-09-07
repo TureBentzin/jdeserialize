@@ -1,6 +1,7 @@
 package org.unsynchronized;
+
 import java.io.Serial;
-import java.util.*;
+import java.util.ArrayList;
 
 /**
  * <p>Typed collection used for storing the values of a serialized array.  </p>
@@ -37,8 +38,8 @@ public class ObjectList extends ArrayList<Object> {
         StringBuffer sb = new StringBuffer();
         sb.append("[ObjectList size=").append(this.size());
         boolean first = true;
-        for(Object o: this) {
-            if(first) {
+        for (Object o : this) {
+            if (first) {
                 first = false;
                 sb.append(' ');
             } else {

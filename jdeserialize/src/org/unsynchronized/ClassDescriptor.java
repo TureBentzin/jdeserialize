@@ -1,7 +1,10 @@
 package org.unsynchronized;
 
-import java.io.*;
-import java.util.*;
+import java.io.ObjectStreamConstants;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * <p>
@@ -23,7 +26,7 @@ public class ClassDescriptor extends Content {
     /**
      * Type of the class being represented; either a normal class or a proxy class.
      */
-    public ClassDescirptorType descriptorType;
+    public ClassDescriptorType descriptorType;
 
     /**
      * Class name.
@@ -149,7 +152,7 @@ public class ClassDescriptor extends Content {
      *
      * @param descriptorType the type of the class
      */
-    public ClassDescriptor(ClassDescirptorType descriptorType) {
+    public ClassDescriptor(ClassDescriptorType descriptorType) {
         super(ContentType.CLASSDESC);
         this.descriptorType = descriptorType;
         this.enumConstants = new HashSet<String>();
@@ -196,7 +199,7 @@ public class ClassDescriptor extends Content {
      */
     public void getHierarchy(ArrayList<ClassDescriptor> classes) {
         if (superClass != null) {
-            if (superClass.descriptorType == ClassDescirptorType.PROXYCLASS) {
+            if (superClass.descriptorType == ClassDescriptorType.PROXYCLASS) {
                 JDeserialize.debugerr("warning: hit a proxy class in superclass hierarchy");
             } else {
                 superClass.getHierarchy(classes);

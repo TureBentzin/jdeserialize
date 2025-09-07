@@ -3,6 +3,6 @@ package org.unsynchronized;
 /**
  * Enum for class description types.
  */
-public enum ClassDescirptorType {
+public enum ClassDescriptorType {
     NORMALCLASS, PROXYCLASS
 }

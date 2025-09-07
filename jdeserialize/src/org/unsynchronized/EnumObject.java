@@ -11,7 +11,7 @@ public class EnumObject extends Content {
     /**
      * The enum's class description.
      */
-    public ClassDescriptor ClassDescriptor;
+    public ClassDescriptor classDescriptor;
 
     /**
      * The string that represents the enum's value.
@@ -28,9 +28,10 @@ public class EnumObject extends Content {
     public EnumObject(int handle, ClassDescriptor cd, StringObject so) {
         super(ContentType.ENUM);
         this.handle = handle;
-        this.ClassDescriptor = cd;
+        this.classDescriptor = cd;
         this.value = so;
     }
+
     public String toString() {
         return "[enum " + JDeserialize.hex(handle) + ": " + value.value + "]";
     }

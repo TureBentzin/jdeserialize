@@ -7,21 +7,28 @@ public class Content implements IContent {
     public int handle;
     public boolean isExceptionObject;
     protected ContentType type;
+
     public Content(ContentType type) {
         this.type = type;
     }
+
     public boolean isExceptionObject() {
         return isExceptionObject;
     }
+
     public void setIsExceptionObject(boolean value) {
         isExceptionObject = value;
     }
+
     public ContentType getType() {
         return type;
     }
+
     public int getHandle() {
         return this.handle;
     }
-    public void validate() throws ValidityException {}
+
+    public void validate() throws ValidityException {
+    }
 }
 

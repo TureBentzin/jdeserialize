@@ -8,7 +8,7 @@ public class ClassObject extends Content {
     /**
      * The class description, including its name.
      */
-    public ClassDescriptor ClassDescriptor;
+    public ClassDescriptor classDescriptor;
 
     /**
      * Constructor.
@@ -19,10 +19,11 @@ public class ClassObject extends Content {
     public ClassObject(int handle, ClassDescriptor cd) {
         super(ContentType.CLASS);
         this.handle = handle;
-        this.ClassDescriptor = cd;
+        this.classDescriptor = cd;
     }
+
     public String toString() {
-        return "[class " + JDeserialize.hex(handle) + ": " + ClassDescriptor.toString() + "]";
+        return "[class " + JDeserialize.hex(handle) + ": " + classDescriptor.toString() + "]";
     }
 }
 

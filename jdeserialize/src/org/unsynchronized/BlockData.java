@@ -21,6 +21,7 @@ public class BlockData extends Content {
         super(ContentType.BLOCKDATA);
         this.buf = buf;
     }
+
     public String toString() {
         return "[blockdata " + JDeserialize.hex(handle) + ": " + buf.length + " bytes]";
     }

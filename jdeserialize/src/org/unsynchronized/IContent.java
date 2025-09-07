@@ -52,7 +52,7 @@ public interface IContent {
      * <b>Note</b>:  Not every Throwable or Exception in the stream will have this flag set to
      * true; only those which were thrown <i>during serialization</i> will
      * </p>
-     * 
+     *
      * @return true iff the object was an exception thrown during serialization
      */
     boolean isExceptionObject();

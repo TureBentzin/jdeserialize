@@ -3,7 +3,8 @@ package org.unsynchronized;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.regex.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * The main user-facing class for the jdeserialize library.  Also the implementation of
@@ -165,7 +166,7 @@ public class JDeserialize implements Serializable {
 
     public void readClassData(DataInputStream stream, Instance inst) throws IOException {
         ArrayList<ClassDescriptor> classes = new ArrayList<>();
-        inst.ClassDescriptor.getHierarchy(classes);
+        inst.classDescriptor.getHierarchy(classes);
         Map<ClassDescriptor, Map<Field, Object>> allData = new HashMap<>();
         Map<ClassDescriptor, List<IContent>> ann = new HashMap<>();
         for (ClassDescriptor cd : classes) {
@@ -197,7 +198,7 @@ public class JDeserialize implements Serializable {
             }
         }
         inst.annotations = ann;
-        inst.fielddata = allData;
+        inst.fieldData = allData;
     }
 
     public Object readFieldValue(FieldType fieldType, DataInputStream stream) throws IOException {
@@ -297,7 +298,7 @@ public class JDeserialize implements Serializable {
 
     public static void dump_Instance(Instance inst, PrintStream ps) {
         StringBuffer sb = new StringBuffer();
-        sb.append("[instance ").append(hex(inst.handle)).append(": ").append(hex(inst.ClassDescriptor.handle)).append("/").append(inst.ClassDescriptor.name);
+        sb.append("[instance ").append(hex(inst.handle)).append(": ").append(hex(inst.classDescriptor.handle)).append("/").append(inst.classDescriptor.name);
         if (inst.annotations != null && !inst.annotations.isEmpty()) {
             sb.append(lineSeparator).append("  object annotations:").append(lineSeparator);
             for (ClassDescriptor cd : inst.annotations.keySet()) {
@@ -307,12 +308,12 @@ public class JDeserialize implements Serializable {
                 }
             }
         }
-        if (inst.fielddata != null && !inst.fielddata.isEmpty()) {
+        if (inst.fieldData != null && !inst.fieldData.isEmpty()) {
             sb.append(lineSeparator).append("  field data:").append(lineSeparator);
-            for (ClassDescriptor cd : inst.fielddata.keySet()) {
+            for (ClassDescriptor cd : inst.fieldData.keySet()) {
                 sb.append("    ").append(hex(cd.handle)).append("/").append(cd.name).append(":").append(lineSeparator);
-                for (Field f : inst.fielddata.get(cd).keySet()) {
-                    Object o = inst.fielddata.get(cd).get(f);
+                for (Field f : inst.fieldData.get(cd).keySet()) {
+                    Object o = inst.fieldData.get(cd).get(f);
                     sb.append("        ").append(f.name).append(": ");
                     if (o instanceof IContent c) {
                         int h = c.getHandle();
@@ -394,7 +395,7 @@ public class JDeserialize implements Serializable {
                 ps.println(content.toString());
             }
         }
-        if (ClassDescriptor.descriptorType == ClassDescirptorType.NORMALCLASS) {
+        if (ClassDescriptor.descriptorType == ClassDescriptorType.NORMALCLASS) {
             if ((ClassDescriptor.descriptorFlags & ObjectStreamConstants.SC_ENUM) != 0) {
                 ps.print(indent(indentLevel) + "enum " + classname + " {");
                 boolean shouldIndent = true;
@@ -447,7 +448,7 @@ public class JDeserialize implements Serializable {
                 dumpClassDesc(indentLevel + 1, icd, ps, fixName);
             }
             ps.println(indent(indentLevel) + "}");
-        } else if (ClassDescriptor.descriptorType == ClassDescirptorType.PROXYCLASS) {
+        } else if (ClassDescriptor.descriptorType == ClassDescriptorType.PROXYCLASS) {
             ps.print(indent(indentLevel) + "// proxy class " + hex(ClassDescriptor.handle));
             if (ClassDescriptor.superClass != null) {
                 ps.print(" extends " + ClassDescriptor.superClass.name);
@@ -565,7 +566,7 @@ public class JDeserialize implements Serializable {
                     throw new IOException("invalid field type char: " + hex(fieldType));
                 }
             }
-            ClassDescriptor cd = new ClassDescriptor(ClassDescirptorType.NORMALCLASS);
+            ClassDescriptor cd = new ClassDescriptor(ClassDescriptorType.NORMALCLASS);
             cd.name = name;
             cd.uid = serialVersionUID;
             cd.handle = handle;
@@ -602,7 +603,7 @@ public class JDeserialize implements Serializable {
             for (int i = 0; i < interfaceCount; i++) {
                 interfaces[i] = stream.readUTF();
             }
-            ClassDescriptor cd = new ClassDescriptor(ClassDescirptorType.PROXYCLASS);
+            ClassDescriptor cd = new ClassDescriptor(ClassDescriptorType.PROXYCLASS);
             cd.handle = handle;
             cd.interfaces = interfaces;
             cd.annotations = read_classAnnotation(stream);
@@ -725,7 +726,7 @@ public class JDeserialize implements Serializable {
         int handle = newHandle();
         debug("reading new object: handle " + hex(handle) + " classdesc " + cd.toString());
         Instance instance = new Instance();
-        instance.ClassDescriptor = cd;
+        instance.classDescriptor = cd;
         instance.handle = handle;
         setHandle(handle, instance);
         readClassData(stream, instance);
@@ -994,7 +995,7 @@ public class JDeserialize implements Serializable {
         Pattern fpat = Pattern.compile("^this\\$(\\d+)$");
         Pattern clpat = Pattern.compile("^((?:[^\\$]+\\$)*[^\\$]+)\\$([^\\$]+)$");
         for (ClassDescriptor cd : classes.values()) {
-            if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
+            if (cd.descriptorType == ClassDescriptorType.PROXYCLASS) {
                 continue;
             }
             for (Field f : cd.fields) {
@@ -1026,7 +1027,7 @@ public class JDeserialize implements Serializable {
             }
         }
         for (ClassDescriptor cd : classes.values()) {
-            if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
+            if (cd.descriptorType == ClassDescriptorType.PROXYCLASS) {
                 continue;
             }
             if (cd.isInnerClass()) {
@@ -1050,7 +1051,7 @@ public class JDeserialize implements Serializable {
                 throw new ValidityException("can't rename class from " + ncd.name + " to " + newname + " -- class already exists!");
             }
             for (ClassDescriptor cd : classes.values()) {
-                if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
+                if (cd.descriptorType == ClassDescriptorType.PROXYCLASS) {
                     continue;
                 }
                 for (Field f : cd.fields) {

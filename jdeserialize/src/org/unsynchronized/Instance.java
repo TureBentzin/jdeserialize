@@ -1,5 +1,8 @@
 package org.unsynchronized;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents an instance of a non-enum, non-Class, non-ObjectStreamClass, 
@@ -10,27 +13,26 @@ public class Instance extends Content {
     /**
      * Collection of field data, organized by class description.  
      */
-    public Map<ClassDescriptor, Map<Field, Object>> fielddata;
+    public Map<ClassDescriptor, Map<Field, Object>> fieldData;
 
     /**
      * Class description for this instance.
      */
-    public ClassDescriptor ClassDescriptor;
+    public ClassDescriptor classDescriptor;
 
     /**
      * Constructor.
      */
     public Instance() {
         super(ContentType.INSTANCE);
-        this.fielddata = new HashMap<ClassDescriptor, Map<Field, Object>>();
+        this.fieldData = new HashMap<>();
     }
+
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append(ClassDescriptor.name).append(' ').append("_h").append(JDeserialize.hex(handle))
-            .append(" = r_").append(JDeserialize.hex(ClassDescriptor.handle)).append(";  ");
-        //sb.append("// [instance " + jdeserialize.hex(handle) + ": " + jdeserialize.hex(classdesc.handle) + "/" + classdesc.name).append("]");
-        return sb.toString();
+        return classDescriptor.name + ' ' + "_h" + JDeserialize.hex(handle) +
+                " = r_" + JDeserialize.hex(classDescriptor.handle) + ";  ";
     }
+
     /**
      * Object annotation data.
      */
