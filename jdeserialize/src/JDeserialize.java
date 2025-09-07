@@ -164,32 +164,32 @@ public class JDeserialize implements Serializable {
     }
 
     public void readClassData(DataInputStream stream, Instance inst) throws IOException {
-        ArrayList<classdesc> classes = new ArrayList<>();
-        inst.classdesc.getHierarchy(classes);
-        Map<classdesc, Map<Field, Object>> allData = new HashMap<>();
-        Map<classdesc, List<IContent>> ann = new HashMap<>();
-        for (classdesc cd : classes) {
+        ArrayList<ClassDescriptor> classes = new ArrayList<>();
+        inst.ClassDescriptor.getHierarchy(classes);
+        Map<ClassDescriptor, Map<Field, Object>> allData = new HashMap<>();
+        Map<ClassDescriptor, List<IContent>> ann = new HashMap<>();
+        for (ClassDescriptor cd : classes) {
             Map<Field, Object> values = new HashMap<>();
-            if ((cd.descflags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
-                if ((cd.descflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
+            if ((cd.descriptorFlags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
+                if ((cd.descriptorFlags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
                     throw new IOException("SC_EXTERNALIZABLE & SC_SERIALIZABLE encountered");
                 }
-                for (Field f : cd.Fields) {
+                for (Field f : cd.fields) {
                     Object o = readFieldValue(f.type, stream);
                     values.put(f, o);
                 }
                 allData.put(cd, values);
-                if ((cd.descflags & ObjectStreamConstants.SC_WRITE_METHOD) != 0) {
-                    if ((cd.descflags & ObjectStreamConstants.SC_ENUM) != 0) {
+                if ((cd.descriptorFlags & ObjectStreamConstants.SC_WRITE_METHOD) != 0) {
+                    if ((cd.descriptorFlags & ObjectStreamConstants.SC_ENUM) != 0) {
                         throw new IOException("SC_ENUM & SC_WRITE_METHOD encountered!");
                     }
                     ann.put(cd, read_classAnnotation(stream));
                 }
-            } else if ((cd.descflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
-                if ((cd.descflags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
+            } else if ((cd.descriptorFlags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
+                if ((cd.descriptorFlags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
                     throw new IOException("SC_SERIALIZABLE & SC_EXTERNALIZABLE encountered");
                 }
-                if ((cd.descflags & ObjectStreamConstants.SC_BLOCK_DATA) != 0) {
+                if ((cd.descriptorFlags & ObjectStreamConstants.SC_BLOCK_DATA) != 0) {
                     throw new EOFException("hit externalizable with nonzero SC_BLOCK_DATA; can't interpret data");
                 } else {
                     ann.put(cd, read_classAnnotation(stream));
@@ -297,10 +297,10 @@ public class JDeserialize implements Serializable {
 
     public static void dump_Instance(Instance inst, PrintStream ps) {
         StringBuffer sb = new StringBuffer();
-        sb.append("[instance ").append(hex(inst.handle)).append(": ").append(hex(inst.classdesc.handle)).append("/").append(inst.classdesc.name);
+        sb.append("[instance ").append(hex(inst.handle)).append(": ").append(hex(inst.ClassDescriptor.handle)).append("/").append(inst.ClassDescriptor.name);
         if (inst.annotations != null && !inst.annotations.isEmpty()) {
             sb.append(lineSeparator).append("  object annotations:").append(lineSeparator);
-            for (classdesc cd : inst.annotations.keySet()) {
+            for (ClassDescriptor cd : inst.annotations.keySet()) {
                 sb.append("    ").append(cd.name).append(lineSeparator);
                 for (IContent c : inst.annotations.get(cd)) {
                     sb.append("        ").append(c.toString()).append(lineSeparator);
@@ -309,7 +309,7 @@ public class JDeserialize implements Serializable {
         }
         if (inst.fielddata != null && !inst.fielddata.isEmpty()) {
             sb.append(lineSeparator).append("  field data:").append(lineSeparator);
-            for (classdesc cd : inst.fielddata.keySet()) {
+            for (ClassDescriptor cd : inst.fielddata.keySet()) {
                 sb.append("    ").append(hex(cd.handle)).append("/").append(cd.name).append(":").append(lineSeparator);
                 for (Field f : inst.fielddata.get(cd).keySet()) {
                     Object o = inst.fielddata.get(cd).get(f);
@@ -382,24 +382,24 @@ public class JDeserialize implements Serializable {
         }
     }
 
-    public static void dumpClassDesc(int indentLevel, classdesc classdesc, PrintStream ps, boolean fixName) throws IOException {
-        String classname = classdesc.name;
+    public static void dumpClassDesc(int indentLevel, ClassDescriptor ClassDescriptor, PrintStream ps, boolean fixName) throws IOException {
+        String classname = ClassDescriptor.name;
         if (fixName) {
             classname = fixClassName(classname);
         }
-        if (classdesc.annotations != null && !classdesc.annotations.isEmpty()) {
+        if (ClassDescriptor.annotations != null && !ClassDescriptor.annotations.isEmpty()) {
             ps.println(indent(indentLevel) + "// annotations: ");
-            for (IContent content : classdesc.annotations) {
+            for (IContent content : ClassDescriptor.annotations) {
                 ps.print(indent(indentLevel) + "// " + indent(1));
                 ps.println(content.toString());
             }
         }
-        if (classdesc.classtype == classdesctype.NORMALCLASS) {
-            if ((classdesc.descflags & ObjectStreamConstants.SC_ENUM) != 0) {
+        if (ClassDescriptor.descriptorType == ClassDescirptorType.NORMALCLASS) {
+            if ((ClassDescriptor.descriptorFlags & ObjectStreamConstants.SC_ENUM) != 0) {
                 ps.print(indent(indentLevel) + "enum " + classname + " {");
                 boolean shouldIndent = true;
                 int length = indent(indentLevel + 1).length();
-                for (String enumConstant : classdesc.enumconstants) {
+                for (String enumConstant : ClassDescriptor.enumConstants) {
                     if (shouldIndent) {
                         ps.println();
                         ps.print(indent(indentLevel + 1));
@@ -417,46 +417,46 @@ public class JDeserialize implements Serializable {
                 return;
             }
             ps.print(indent(indentLevel));
-            if (classdesc.isStaticMemberClass()) {
+            if (ClassDescriptor.isStaticMemberClass()) {
                 ps.print("static ");
             }
-            ps.print("class " + (classname.charAt(0) == '[' ? resolveJavaType(FieldType.ARRAY, classdesc.name, false, fixName) : classname));
-            if (classdesc.superclass != null) {
-                ps.print(" extends " + classdesc.superclass.name);
+            ps.print("class " + (classname.charAt(0) == '[' ? resolveJavaType(FieldType.ARRAY, ClassDescriptor.name, false, fixName) : classname));
+            if (ClassDescriptor.superClass != null) {
+                ps.print(" extends " + ClassDescriptor.superClass.name);
             }
             ps.print(" implements ");
-            if ((classdesc.descflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
+            if ((ClassDescriptor.descriptorFlags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
                 ps.print("java.io.Externalizable");
             } else {
                 ps.print("java.io.Serializable");
             }
-            if (classdesc.interfaces != null) {
-                for (String intf : classdesc.interfaces) {
+            if (ClassDescriptor.interfaces != null) {
+                for (String intf : ClassDescriptor.interfaces) {
                     ps.print(", " + intf);
                 }
             }
             ps.println(" {");
-            for (Field f : classdesc.Fields) {
+            for (Field f : ClassDescriptor.fields) {
                 if (f.isInnerClassReference()) {
                     continue;
                 }
                 ps.print(indent(indentLevel + 1) + f.getJavaType());
                 ps.println(" " + f.name + ";");
             }
-            for (classdesc icd : classdesc.innerclasses) {
+            for (ClassDescriptor icd : ClassDescriptor.innerClasses) {
                 dumpClassDesc(indentLevel + 1, icd, ps, fixName);
             }
             ps.println(indent(indentLevel) + "}");
-        } else if (classdesc.classtype == classdesctype.PROXYCLASS) {
-            ps.print(indent(indentLevel) + "// proxy class " + hex(classdesc.handle));
-            if (classdesc.superclass != null) {
-                ps.print(" extends " + classdesc.superclass.name);
+        } else if (ClassDescriptor.descriptorType == ClassDescirptorType.PROXYCLASS) {
+            ps.print(indent(indentLevel) + "// proxy class " + hex(ClassDescriptor.handle));
+            if (ClassDescriptor.superClass != null) {
+                ps.print(" extends " + ClassDescriptor.superClass.name);
             }
             ps.println(" implements ");
-            for (String intf : classdesc.interfaces) {
+            for (String intf : ClassDescriptor.interfaces) {
                 ps.println(indent(indentLevel) + "//    " + intf + ", ");
             }
-            if ((classdesc.descflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
+            if ((ClassDescriptor.descriptorFlags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
                 ps.println(indent(indentLevel) + "//    java.io.Externalizable");
             } else {
                 ps.println(indent(indentLevel) + "//    java.io.Serializable");
@@ -514,12 +514,12 @@ public class JDeserialize implements Serializable {
         return c;
     }
 
-    public classdesc readClassDesc(DataInputStream stream) throws IOException {
+    public ClassDescriptor readClassDesc(DataInputStream stream) throws IOException {
         byte tc = stream.readByte();
         return handleClassDesc(tc, stream, false);
     }
 
-    public classdesc readNewClassDesc(DataInputStream stream) throws IOException {
+    public ClassDescriptor readNewClassDesc(DataInputStream stream) throws IOException {
         byte tc = stream.readByte();
         return handleNewClassDesc(tc, stream);
     }
@@ -534,11 +534,11 @@ public class JDeserialize implements Serializable {
         return content;
     }
 
-    public classdesc handleNewClassDesc(byte tc, DataInputStream stream) throws IOException {
+    public ClassDescriptor handleNewClassDesc(byte tc, DataInputStream stream) throws IOException {
         return handleClassDesc(tc, stream, true);
     }
 
-    public classdesc handleClassDesc(byte tc, DataInputStream stream, boolean mustBeNew) throws IOException {
+    public ClassDescriptor handleClassDesc(byte tc, DataInputStream stream, boolean mustBeNew) throws IOException {
         if (tc == ObjectStreamConstants.TC_CLASSDESC) {
             String name = stream.readUTF();
             long serialVersionUID = stream.readLong();
@@ -565,14 +565,14 @@ public class JDeserialize implements Serializable {
                     throw new IOException("invalid field type char: " + hex(fieldType));
                 }
             }
-            classdesc cd = new classdesc(classdesctype.NORMALCLASS);
+            ClassDescriptor cd = new ClassDescriptor(ClassDescirptorType.NORMALCLASS);
             cd.name = name;
-            cd.serialVersionUID = serialVersionUID;
+            cd.uid = serialVersionUID;
             cd.handle = handle;
-            cd.descflags = descflags;
-            cd.Fields = Fields;
+            cd.descriptorFlags = descflags;
+            cd.fields = Fields;
             cd.annotations = read_classAnnotation(stream);
-            cd.superclass = readClassDesc(stream);
+            cd.superClass = readClassDesc(stream);
             setHandle(handle, cd);
             debug("read new classdesc: handle " + hex(handle) + " name " + name);
             return cd;
@@ -587,10 +587,10 @@ public class JDeserialize implements Serializable {
                 throw new ValidityException("expected new class description -- got a reference!");
             }
             IContent c = readPrevObject(stream);
-            if (!(c instanceof classdesc)) {
+            if (!(c instanceof ClassDescriptor)) {
                 throw new IOException("referenced object not a class description!");
             }
-            classdesc cd = (classdesc) c;
+            ClassDescriptor cd = (ClassDescriptor) c;
             return cd;
         } else if (tc == ObjectStreamConstants.TC_PROXYCLASSDESC) {
             int handle = newHandle();
@@ -602,11 +602,11 @@ public class JDeserialize implements Serializable {
             for (int i = 0; i < interfaceCount; i++) {
                 interfaces[i] = stream.readUTF();
             }
-            classdesc cd = new classdesc(classdesctype.PROXYCLASS);
+            ClassDescriptor cd = new ClassDescriptor(ClassDescirptorType.PROXYCLASS);
             cd.handle = handle;
             cd.interfaces = interfaces;
             cd.annotations = read_classAnnotation(stream);
-            cd.superclass = readClassDesc(stream);
+            cd.superClass = readClassDesc(stream);
             setHandle(handle, cd);
             cd.name = "(proxy class; no name)";
             debug("read new proxy classdesc: handle " + hex(handle) + " names [" + Arrays.toString(interfaces) + "]");
@@ -617,7 +617,7 @@ public class JDeserialize implements Serializable {
     }
 
     public ArrayObject readNewArray(DataInputStream stream) throws IOException {
-        classdesc cd = readClassDesc(stream);
+        ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
         debug("reading new array: handle " + hex(handle) + " classdesc " + cd.toString());
         if (cd.name.length() < 2) {
@@ -643,7 +643,7 @@ public class JDeserialize implements Serializable {
     }
 
     public ClassObject readNewClass(DataInputStream stream) throws IOException {
-        classdesc cd = readClassDesc(stream);
+        ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
         debug("reading new class: handle " + hex(handle) + " classdesc " + cd.toString());
         ClassObject clazz = new ClassObject(handle, cd);
@@ -652,7 +652,7 @@ public class JDeserialize implements Serializable {
     }
 
     public EnumObject readNewEnum(DataInputStream stream) throws IOException {
-        classdesc cd = readClassDesc(stream);
+        ClassDescriptor cd = readClassDesc(stream);
         if (cd == null) {
             throw new IOException("enum classdesc can't be null!");
         }
@@ -721,11 +721,11 @@ public class JDeserialize implements Serializable {
     }
 
     public Instance readNewObject(DataInputStream stream) throws IOException {
-        classdesc cd = readClassDesc(stream);
+        ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
         debug("reading new object: handle " + hex(handle) + " classdesc " + cd.toString());
         Instance instance = new Instance();
-        instance.classdesc = cd;
+        instance.ClassDescriptor = cd;
         instance.handle = handle;
         setHandle(handle, instance);
         readClassData(stream, instance);
@@ -908,7 +908,7 @@ public class JDeserialize implements Serializable {
                     ? " (exclusion filter " + filter.getFirst() + ")"
                     : ""));
             for (IContent c : handles.values()) {
-                if (c instanceof classdesc cl) {
+                if (c instanceof ClassDescriptor cl) {
                     if (!showArray && cl.isArrayClass()) {
                         continue;
                     }
@@ -980,24 +980,24 @@ public class JDeserialize implements Serializable {
      * @throws ValidityException if the found values don't correspond to spec
      */
     public void connectMemberClasses() throws IOException {
-        HashMap<classdesc, String> newNames = new HashMap<>();
-        HashMap<String, classdesc> classes = new HashMap<>();
+        HashMap<ClassDescriptor, String> newNames = new HashMap<>();
+        HashMap<String, ClassDescriptor> classes = new HashMap<>();
         HashSet<String> classnames = new HashSet<>();
         for (IContent c : handles.values()) {
-            if (!(c instanceof classdesc)) {
+            if (!(c instanceof ClassDescriptor)) {
                 continue;
             }
-            classdesc cd = (classdesc) c;
+            ClassDescriptor cd = (ClassDescriptor) c;
             classes.put(cd.name, cd);
             classnames.add(cd.name);
         }
         Pattern fpat = Pattern.compile("^this\\$(\\d+)$");
         Pattern clpat = Pattern.compile("^((?:[^\\$]+\\$)*[^\\$]+)\\$([^\\$]+)$");
-        for (classdesc cd : classes.values()) {
-            if (cd.classtype == classdesctype.PROXYCLASS) {
+        for (ClassDescriptor cd : classes.values()) {
+            if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
                 continue;
             }
-            for (Field f : cd.Fields) {
+            for (Field f : cd.fields) {
                 if (f.type != FieldType.OBJECT) {
                     continue;
                 }
@@ -1011,7 +1011,7 @@ public class JDeserialize implements Serializable {
                     throw new ValidityException("inner class enclosing-class reference field exists, but class name doesn't match expected pattern: class " + cd.name + " field " + f.name);
                 }
                 String outer = clmat.group(1), inner = clmat.group(2);
-                classdesc outercd = classes.get(outer);
+                ClassDescriptor outercd = classes.get(outer);
                 if (outercd == null) {
                     throw new ValidityException("couldn't connect inner classes: outer class not found for field name " + f.name);
                 }
@@ -1025,8 +1025,8 @@ public class JDeserialize implements Serializable {
                 newNames.put(cd, inner);
             }
         }
-        for (classdesc cd : classes.values()) {
-            if (cd.classtype == classdesctype.PROXYCLASS) {
+        for (ClassDescriptor cd : classes.values()) {
+            if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
                 continue;
             }
             if (cd.isInnerClass()) {
@@ -1037,23 +1037,23 @@ public class JDeserialize implements Serializable {
                 continue;
             }
             String outer = clmat.group(1), inner = clmat.group(2);
-            classdesc outercd = classes.get(outer);
+            ClassDescriptor outercd = classes.get(outer);
             if (outercd != null) {
                 outercd.addInnerClass(cd);
                 cd.setIsStaticMemberClass(true);
                 newNames.put(cd, inner);
             }
         }
-        for (classdesc ncd : newNames.keySet()) {
+        for (ClassDescriptor ncd : newNames.keySet()) {
             String newname = newNames.get(ncd);
             if (classnames.contains(newname)) {
                 throw new ValidityException("can't rename class from " + ncd.name + " to " + newname + " -- class already exists!");
             }
-            for (classdesc cd : classes.values()) {
-                if (cd.classtype == classdesctype.PROXYCLASS) {
+            for (ClassDescriptor cd : classes.values()) {
+                if (cd.descriptorType == ClassDescirptorType.PROXYCLASS) {
                     continue;
                 }
-                for (Field f : cd.Fields) {
+                for (Field f : cd.fields) {
                     if (f.getJavaType().equals(ncd.name)) {
                         f.setReferenceTypeName(newname);
                     }

@@ -11,7 +11,7 @@ public class EnumObject extends Content {
     /**
      * The enum's class description.
      */
-    public classdesc classdesc;
+    public ClassDescriptor ClassDescriptor;
 
     /**
      * The string that represents the enum's value.
@@ -25,10 +25,10 @@ public class EnumObject extends Content {
      * @param cd the enum's class description
      * @param so the enum's value
      */
-    public EnumObject(int handle, classdesc cd, StringObject so) {
+    public EnumObject(int handle, ClassDescriptor cd, StringObject so) {
         super(ContentType.ENUM);
         this.handle = handle;
-        this.classdesc = cd;
+        this.ClassDescriptor = cd;
         this.value = so;
     }
     public String toString() {

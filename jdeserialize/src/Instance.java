@@ -10,29 +10,29 @@ public class Instance extends Content {
     /**
      * Collection of field data, organized by class description.  
      */
-    public Map<classdesc, Map<Field, Object>> fielddata;
+    public Map<ClassDescriptor, Map<Field, Object>> fielddata;
 
     /**
      * Class description for this instance.
      */
-    public classdesc classdesc;
+    public ClassDescriptor ClassDescriptor;
 
     /**
      * Constructor.
      */
     public Instance() {
         super(ContentType.INSTANCE);
-        this.fielddata = new HashMap<classdesc, Map<Field, Object>>();
+        this.fielddata = new HashMap<ClassDescriptor, Map<Field, Object>>();
     }
     public String toString() {
         StringBuffer sb = new StringBuffer();
-        sb.append(classdesc.name).append(' ').append("_h").append(JDeserialize.hex(handle))
-            .append(" = r_").append(JDeserialize.hex(classdesc.handle)).append(";  ");
+        sb.append(ClassDescriptor.name).append(' ').append("_h").append(JDeserialize.hex(handle))
+            .append(" = r_").append(JDeserialize.hex(ClassDescriptor.handle)).append(";  ");
         //sb.append("// [instance " + jdeserialize.hex(handle) + ": " + jdeserialize.hex(classdesc.handle) + "/" + classdesc.name).append("]");
         return sb.toString();
     }
     /**
      * Object annotation data.
      */
-    public Map<classdesc, List<IContent>> annotations;
+    public Map<ClassDescriptor, List<IContent>> annotations;
 }

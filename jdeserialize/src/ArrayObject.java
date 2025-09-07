@@ -11,22 +11,22 @@ public class ArrayObject extends Content {
     /**
      * Type of the array instance.
      */
-    public classdesc classdesc;
+    public ClassDescriptor ClassDescriptor;
 
     /**
      * Values of the array, in the order they were read from the stream.
      */
     public ObjectList data;
 
-    public ArrayObject(int handle, classdesc cd, ObjectList data) {
+    public ArrayObject(int handle, ClassDescriptor cd, ObjectList data) {
         super(ContentType.ARRAY);
         this.handle = handle;
-        this.classdesc = cd;
+        this.ClassDescriptor = cd;
         this.data = data;
     }
 
     public String toString() {
-        return "[Array " + JDeserialize.hex(handle) + " classdesc " + classdesc.toString() + ": "
+        return "[Array " + JDeserialize.hex(handle) + " classdesc " + ClassDescriptor.toString() + ": "
                 + data.toString() + "]";
     }
 }
