@@ -43,7 +43,7 @@ public class classdesc extends Content {
     /**
      * Array of fields in the class, in the order serialized by the stream writer.
      */
-    public field[] fields;
+    public Field[] Fields;
 
     /**
      * List of inner classes, in the order serialized by the stream writer.
@@ -205,7 +205,7 @@ public class classdesc extends Content {
     public void validate() throws ValidityException {
         // If neither SC_SERIALIZABLE nor SC_EXTERNALIZABLE is set, then the number of
         // fields is always zero.  (spec section 4.3)
-        if((descflags & (ObjectStreamConstants.SC_SERIALIZABLE | ObjectStreamConstants.SC_EXTERNALIZABLE)) == 0 && fields != null && fields.length > 0) {
+        if((descflags & (ObjectStreamConstants.SC_SERIALIZABLE | ObjectStreamConstants.SC_EXTERNALIZABLE)) == 0 && Fields != null && Fields.length > 0) {
             throw new ValidityException("non-serializable, non-externalizable class has fields!");
         }
         if((descflags & (ObjectStreamConstants.SC_SERIALIZABLE | ObjectStreamConstants.SC_EXTERNALIZABLE)) == (ObjectStreamConstants.SC_SERIALIZABLE | ObjectStreamConstants.SC_EXTERNALIZABLE)) {
@@ -213,7 +213,7 @@ public class classdesc extends Content {
         }
         if((descflags & ObjectStreamConstants.SC_ENUM) != 0) {
             // we're an enum; shouldn't have any fields/superinterfaces
-            if((fields != null && fields.length > 0) || interfaces != null) {
+            if((Fields != null && Fields.length > 0) || interfaces != null) {
                 throw new ValidityException("enums shouldn't implement interfaces or have non-constant fields!");
             }
         } else {

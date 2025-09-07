@@ -166,15 +166,15 @@ public class JDeserialize implements Serializable {
     public void readClassData(DataInputStream stream, Instance inst) throws IOException {
         ArrayList<classdesc> classes = new ArrayList<>();
         inst.classdesc.getHierarchy(classes);
-        Map<classdesc, Map<field, Object>> allData = new HashMap<>();
+        Map<classdesc, Map<Field, Object>> allData = new HashMap<>();
         Map<classdesc, List<IContent>> ann = new HashMap<>();
         for (classdesc cd : classes) {
-            Map<field, Object> values = new HashMap<>();
+            Map<Field, Object> values = new HashMap<>();
             if ((cd.descflags & ObjectStreamConstants.SC_SERIALIZABLE) != 0) {
                 if ((cd.descflags & ObjectStreamConstants.SC_EXTERNALIZABLE) != 0) {
                     throw new IOException("SC_EXTERNALIZABLE & SC_SERIALIZABLE encountered");
                 }
-                for (field f : cd.fields) {
+                for (Field f : cd.Fields) {
                     Object o = readFieldValue(f.type, stream);
                     values.put(f, o);
                 }
@@ -311,7 +311,7 @@ public class JDeserialize implements Serializable {
             sb.append(lineSeparator).append("  field data:").append(lineSeparator);
             for (classdesc cd : inst.fielddata.keySet()) {
                 sb.append("    ").append(hex(cd.handle)).append("/").append(cd.name).append(":").append(lineSeparator);
-                for (field f : inst.fielddata.get(cd).keySet()) {
+                for (Field f : inst.fielddata.get(cd).keySet()) {
                     Object o = inst.fielddata.get(cd).get(f);
                     sb.append("        ").append(f.name).append(": ");
                     if (o instanceof IContent c) {
@@ -436,7 +436,7 @@ public class JDeserialize implements Serializable {
                 }
             }
             ps.println(" {");
-            for (field f : classdesc.fields) {
+            for (Field f : classdesc.Fields) {
                 if (f.isInnerClassReference()) {
                     continue;
                 }
@@ -548,19 +548,19 @@ public class JDeserialize implements Serializable {
             if (fieldCount < 0) {
                 throw new IOException("invalid field count: " + fieldCount);
             }
-            field[] fields = new field[fieldCount];
+            Field[] Fields = new Field[fieldCount];
             for (short s = 0; s < fieldCount; s++) {
                 byte fieldType = stream.readByte();
                 if (fieldType == 'B' || fieldType == 'C' || fieldType == 'D'
                         || fieldType == 'F' || fieldType == 'I' || fieldType == 'J'
                         || fieldType == 'S' || fieldType == 'Z') {
                     String fieldName = stream.readUTF();
-                    fields[s] = new field(FieldType.get(fieldType), fieldName);
+                    Fields[s] = new Field(FieldType.get(fieldType), fieldName);
                 } else if (fieldType == '[' || fieldType == 'L') {
                     String fieldName = stream.readUTF();
                     byte stc = stream.readByte();
                     StringObject classname = readNewString(stc, stream);
-                    fields[s] = new field(FieldType.get(fieldType), fieldName, classname);
+                    Fields[s] = new Field(FieldType.get(fieldType), fieldName, classname);
                 } else {
                     throw new IOException("invalid field type char: " + hex(fieldType));
                 }
@@ -570,7 +570,7 @@ public class JDeserialize implements Serializable {
             cd.serialVersionUID = serialVersionUID;
             cd.handle = handle;
             cd.descflags = descflags;
-            cd.fields = fields;
+            cd.Fields = Fields;
             cd.annotations = read_classAnnotation(stream);
             cd.superclass = readClassDesc(stream);
             setHandle(handle, cd);
@@ -997,7 +997,7 @@ public class JDeserialize implements Serializable {
             if (cd.classtype == classdesctype.PROXYCLASS) {
                 continue;
             }
-            for (field f : cd.fields) {
+            for (Field f : cd.Fields) {
                 if (f.type != FieldType.OBJECT) {
                     continue;
                 }
@@ -1016,7 +1016,7 @@ public class JDeserialize implements Serializable {
                     throw new ValidityException("couldn't connect inner classes: outer class not found for field name " + f.name);
                 }
                 if (!outercd.name.equals(f.getJavaType())) {
-                    throw new ValidityException("outer class field type doesn't match field type name: " + f.classname.value + " outer class name " + outercd.name);
+                    throw new ValidityException("outer class field type doesn't match field type name: " + f.className.value + " outer class name " + outercd.name);
                 }
                 outercd.addInnerClass(cd);
                 cd.setIsLocalInnerClass(islocal);
@@ -1053,7 +1053,7 @@ public class JDeserialize implements Serializable {
                 if (cd.classtype == classdesctype.PROXYCLASS) {
                     continue;
                 }
-                for (field f : cd.fields) {
+                for (Field f : cd.Fields) {
                     if (f.getJavaType().equals(ncd.name)) {
                         f.setReferenceTypeName(newname);
                     }

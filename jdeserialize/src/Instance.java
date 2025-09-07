@@ -10,7 +10,7 @@ public class Instance extends Content {
     /**
      * Collection of field data, organized by class description.  
      */
-    public Map<classdesc, Map<field, Object>> fielddata;
+    public Map<classdesc, Map<Field, Object>> fielddata;
 
     /**
      * Class description for this instance.
@@ -22,7 +22,7 @@ public class Instance extends Content {
      */
     public Instance() {
         super(ContentType.INSTANCE);
-        this.fielddata = new HashMap<classdesc, Map<field, Object>>();
+        this.fielddata = new HashMap<classdesc, Map<Field, Object>>();
     }
     public String toString() {
         StringBuffer sb = new StringBuffer();
