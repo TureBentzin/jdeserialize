@@ -13,12 +13,12 @@ package org.unsynchronized;
  * Specification.
  * </p>
  */
-public class exceptionstate extends Content {
+public class ExceptionState extends Content {
     /**
      * The serialized exception object.
      */
-    public IContent exceptionobj;
-    
+    public IContent exception;
+
     /**
      * <p>
      * An array of bytes representing the data read before the exception was encountered.
@@ -40,32 +40,33 @@ public class exceptionstate extends Content {
      * accurate.
      * </p>
      */
-    public byte[] streamdata;
+    public byte[] data;
 
     /**
      * Consturctor.
-     * @param exobj the serialized exception object 
+     * @param exception the serialized exception object
      * @param data the array of stream bytes that led up to the exception
      */
-    public exceptionstate(IContent exobj, byte[] data) {
+    public ExceptionState(IContent exception, byte[] data) {
         super(ContentType.EXCEPTIONSTATE);
-        this.exceptionobj = exobj;
-        this.streamdata = data;
-        this.handle = exobj.getHandle();
+        this.exception = exception;
+        this.data = data;
+        this.handle = exception.getHandle();
     }
+
     public String toString() {
-        StringBuffer sb = new StringBuffer();
-        sb.append("[exceptionstate object " + exceptionobj.toString() + "  buflen " + streamdata.length);
-        if(streamdata.length > 0) {
-            for(int i = 0; i < streamdata.length; i++) {
-                if((i % 16) == 0) {
-                    sb.append(JDeserialize.lineSeparator).append(String.format("%7x: ", Integer.valueOf(i)));
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[ExceptionState object ").append(exception.toString()).append("  length ").append(data.length);
+        if (data.length > 0) {
+            for (int i = 0; i < data.length; i++) {
+                if ((i % 16) == 0) {
+                    stringBuilder.append(JDeserialize.lineSeparator).append(String.format("%7x: ", i));
                 }
-                sb.append(" ").append(JDeserialize.hexnoprefix(streamdata[i]));
+                stringBuilder.append(" ").append(JDeserialize.hexnoprefix(data[i]));
             }
-            sb.append(JDeserialize.lineSeparator);
+            stringBuilder.append(JDeserialize.lineSeparator);
         }
-        sb.append("]");
-        return sb.toString();
+        stringBuilder.append("]");
+        return stringBuilder.toString();
     }
 }

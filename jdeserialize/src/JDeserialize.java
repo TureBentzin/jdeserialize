@@ -108,7 +108,7 @@ public class JDeserialize implements Serializable {
      *
      * @return a list of content objects
      * @see IContent
-     * @see exceptionstate
+     * @see ExceptionState
      */
     public List<IContent> getContent() {
         return IContent;
@@ -828,7 +828,7 @@ public class JDeserialize implements Serializable {
                 IContent content = readContent(tc, stream, true);
                 System.out.println("read: " + content.toString());
                 if (content.isExceptionObject()) {
-                    content = new exceptionstate(content, loggerStream.getRecordedData());
+                    content = new ExceptionState(content, loggerStream.getRecordedData());
                 }
                 IContent.add(content);
             }
