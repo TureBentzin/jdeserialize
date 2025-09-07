@@ -616,7 +616,7 @@ public class JDeserialize implements Serializable {
         }
     }
 
-    public arrayobj readNewArray(DataInputStream stream) throws IOException {
+    public ArrayObject readNewArray(DataInputStream stream) throws IOException {
         classdesc cd = readClassDesc(stream);
         int handle = newHandle();
         debug("reading new array: handle " + hex(handle) + " classdesc " + cd.toString());
@@ -624,7 +624,7 @@ public class JDeserialize implements Serializable {
             throw new IOException("invalid name in array classdesc: " + cd.name);
         }
         ObjectList ac = readArrayValues(cd.name.substring(1), stream);
-        return new arrayobj(handle, cd, ac);
+        return new ArrayObject(handle, cd, ac);
     }
 
     public ObjectList readArrayValues(String string, DataInputStream stream) throws IOException {

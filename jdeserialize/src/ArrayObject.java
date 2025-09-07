@@ -7,7 +7,7 @@ package org.unsynchronized;
  * field type code representing the primitive type.  See jdeserialize.resolveJavaType()
  * for an example of analysis/generation of human-readable names from these class names.</p>
  */
-public class arrayobj extends Content {
+public class ArrayObject extends Content {
     /**
      * Type of the array instance.
      */
@@ -18,15 +18,16 @@ public class arrayobj extends Content {
      */
     public ObjectList data;
 
-    public arrayobj(int handle, classdesc cd, ObjectList data) {
+    public ArrayObject(int handle, classdesc cd, ObjectList data) {
         super(ContentType.ARRAY);
         this.handle = handle;
         this.classdesc = cd;
         this.data = data;
     }
+
     public String toString() {
-        return "[array " + JDeserialize.hex(handle) + " classdesc " + classdesc.toString() + ": "
-            + data.toString() + "]";
+        return "[Array " + JDeserialize.hex(handle) + " classdesc " + classdesc.toString() + ": "
+                + data.toString() + "]";
     }
 }
 
