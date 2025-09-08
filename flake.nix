@@ -32,7 +32,7 @@
           in
           pkgs.stdenv.mkDerivation {
             pname = "jdeserialize";
-            version = "2.0";
+            version = "2.1";
             src = ./jdeserialize;
             buildInputs = [ ];
             nativeBuildInputs = packages;
