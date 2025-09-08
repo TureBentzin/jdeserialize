@@ -1131,7 +1131,7 @@ public class JDeserialize implements Serializable {
 
     public void debug(String format, Object... args) {
         if (debugEnabled) {
-            defaultOut.println("[DEBUG]: " + String.format(format, args));
+            debugOut.println("[DEBUG]: " + String.format(format, args));
         }
     }
 

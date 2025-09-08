@@ -119,7 +119,7 @@ public class OptionManager {
                 Integer length = null;
                 // Attempt 1: direct match
                 if (arg.startsWith("--")) {
-                    length = optionLength.get(args[i].substring(2)); // a direct match is indicated by TWO leading dashes
+                    length = optionLength.get(args[i].substring(2));
                 }
                 if (length == null) {
                     // Attempt 2: greedily match until just one option fits arg
@@ -133,7 +133,7 @@ public class OptionManager {
                         length = optionLength.get(match);
                         args[i] = match;
                     } else if (possibleMatches.size() > 1) {
-                        throw new OptionParseException("ambiguous option: " + args[i] + " (could be any of " + possibleMatches + ")");
+                        throw new OptionParseException("ambiguous option '" + args[i] + "' (could be any of " + possibleMatches + ")");
                     }
                 }
                 if (length == null) {
