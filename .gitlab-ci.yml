@@ -1,4 +1,4 @@
-image: registry.git.fh-aachen.de/tb3838s/jdeserialize/ant-builder
+image: registry.git.fh-aachen.de/tb3838s/jdeserialize/ant-builder:2.0
 
 stages:          # List of stages for jobs, and their order of execution
   - build
