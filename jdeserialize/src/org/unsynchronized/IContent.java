@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>
@@ -13,11 +11,11 @@ import java.util.*;
  * classes/subinterfaces.
  * </p>
  */
-public interface content {
+public interface IContent {
     /**
      * @return the type of instance represented by this object.
      */
-    public contenttype getType();
+    ContentType getType();
 
     /**
      * <p>
@@ -35,14 +33,14 @@ public interface content {
      *
      * @return the handle assigned in the stream
      */
-    public int getHandle();
+    int getHandle();
 
     /**
      * Performs extra object-specific validity checks.  
      *
      * @throws ValidityException if the object's state is invalid
      */
-    public void validate() throws ValidityException;
+    void validate() throws ValidityException;
 
     /**
      * <p>
@@ -54,10 +52,10 @@ public interface content {
      * <b>Note</b>:  Not every Throwable or Exception in the stream will have this flag set to
      * true; only those which were thrown <i>during serialization</i> will
      * </p>
-     * 
+     *
      * @return true iff the object was an exception thrown during serialization
      */
-    public boolean isExceptionObject();
+    boolean isExceptionObject();
 
     /**
      * Sets the flag that tells whether or not this object is an exception that was caught
@@ -65,6 +63,6 @@ public interface content {
      *
      * @param value the new value to use
      */
-    public void setIsExceptionObject(boolean value);
+    void setIsExceptionObject(boolean value);
 }
 

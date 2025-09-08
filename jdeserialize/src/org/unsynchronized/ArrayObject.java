@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>Represents an array instance, including the values the comprise the array.  </p>
@@ -9,26 +7,27 @@ import java.util.*;
  * field type code representing the primitive type.  See jdeserialize.resolveJavaType()
  * for an example of analysis/generation of human-readable names from these class names.</p>
  */
-public class arrayobj extends contentbase {
+public class ArrayObject extends Content {
     /**
      * Type of the array instance.
      */
-    public classdesc classdesc;
+    public ClassDescriptor classDescriptor;
 
     /**
      * Values of the array, in the order they were read from the stream.
      */
-    public arraycoll data;
+    public ObjectList data;
 
-    public arrayobj(int handle, classdesc cd, arraycoll data) {
-        super(contenttype.ARRAY);
+    public ArrayObject(int handle, ClassDescriptor cd, ObjectList data) {
+        super(ContentType.ARRAY);
         this.handle = handle;
-        this.classdesc = cd;
+        this.classDescriptor = cd;
         this.data = data;
     }
+
     public String toString() {
-        return "[array " + jdeserialize.hex(handle) + " classdesc " + classdesc.toString() + ": " 
-            + data.toString() + "]";
+        return "[Array " + JDeserialize.hex(handle) + " classdesc " + classDescriptor.toString() + ": "
+                + data.toString() + "]";
     }
 }
 

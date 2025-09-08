@@ -1,16 +1,14 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * This represents a Class object (i.e. an instance of type Class) serialized in the
  * stream.
  */
-public class classobj extends contentbase {
+public class ClassObject extends Content {
     /**
      * The class description, including its name.
      */
-    public classdesc classdesc;
+    public ClassDescriptor classDescriptor;
 
     /**
      * Constructor.
@@ -18,13 +16,14 @@ public class classobj extends contentbase {
      * @param handle the instance's handle
      * @param cd the instance's class description
      */
-    public classobj(int handle, classdesc cd) {
-        super(contenttype.CLASS);
+    public ClassObject(int handle, ClassDescriptor cd) {
+        super(ContentType.CLASS);
         this.handle = handle;
-        this.classdesc = cd;
+        this.classDescriptor = cd;
     }
+
     public String toString() {
-        return "[class " + jdeserialize.hex(handle) + ": " + classdesc.toString() + "]";
+        return "[class " + JDeserialize.hex(handle) + ": " + classDescriptor.toString() + "]";
     }
 }
 

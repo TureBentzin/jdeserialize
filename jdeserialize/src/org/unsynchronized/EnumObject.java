@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>
@@ -9,16 +7,16 @@ import java.util.*;
  * to the enum's value.  No other fields are ever serialized.
  * </p>
  */
-public class enumobj extends contentbase {
+public class EnumObject extends Content {
     /**
      * The enum's class description.
      */
-    public classdesc classdesc;
+    public ClassDescriptor classDescriptor;
 
     /**
      * The string that represents the enum's value.
      */
-    public stringobj value;
+    public StringObject value;
 
     /**
      * Constructor.
@@ -27,13 +25,14 @@ public class enumobj extends contentbase {
      * @param cd the enum's class description
      * @param so the enum's value
      */
-    public enumobj(int handle, classdesc cd, stringobj so) {
-        super(contenttype.ENUM);
+    public EnumObject(int handle, ClassDescriptor cd, StringObject so) {
+        super(ContentType.ENUM);
         this.handle = handle;
-        this.classdesc = cd;
+        this.classDescriptor = cd;
         this.value = so;
     }
+
     public String toString() {
-        return "[enum " + jdeserialize.hex(handle) + ": " + value.value + "]";
+        return "[enum " + JDeserialize.hex(handle) + ": " + value.value + "]";
     }
 }

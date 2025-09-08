@@ -1,6 +1,4 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
 
 /**
  * <p>
@@ -12,7 +10,7 @@ import java.util.*;
  * of reference or array types, the name of the class being referred to.  
  * </p>
  */
-public enum fieldtype {
+public enum FieldType {
     BYTE ('B', "byte"),
     CHAR ('C', "char"),
     DOUBLE ('D', "double"), 
@@ -32,7 +30,7 @@ public enum fieldtype {
      * @param ch the character representing the type (must match one of those listed in
      * prim_typecode or obj_typecode in the Object Serialization Stream Protocol)
      */
-    fieldtype(char ch) {
+    FieldType(char ch) {
         this(ch, null);
     }
 
@@ -43,7 +41,7 @@ public enum fieldtype {
      * prim_typecode or obj_typecode in the Object Serialization Stream Protocol)
      * @param javatype the name of the object class, where applicable (or null if not)
      */
-    fieldtype(char ch, String javatype) {
+    FieldType(char ch, String javatype) {
         this.ch = ch;
         this.javatype = javatype;
     }
@@ -74,7 +72,7 @@ public enum fieldtype {
      * @return the corresponding fieldtype enum
      * @throws ValidityException if the type code is invalid
      */
-    public static fieldtype get(byte b) throws ValidityException {
+    public static FieldType get(byte b) throws ValidityException {
         switch(b) {
             case 'B': 
                 return BYTE;

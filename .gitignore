@@ -5,3 +5,5 @@ build
 javadoc/
 *.jar
 .direnv/
+*.secret
+*.bak

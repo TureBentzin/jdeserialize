@@ -1,27 +1,27 @@
 package org.unsynchronized;
-import java.io.*;
-import java.util.*;
+
+import java.io.IOException;
 
 /**
  * This class represents a field within a class description/declaration (classdesc).  It
  * contains information about the type and name of the field.  Fields themselves don't
  * have a handle; inside the stream, they exist only as part of a class description.
  */
-public class field {
+public class Field {
     /**
      * The type of the field.
      */
-    public fieldtype type;
+    public FieldType type;
 
     /**
      * The name of the field.
      */
-    public String name; 
+    public String name;
 
     /**
      * The string object representing the class name.
      */
-    public stringobj classname; 
+    public StringObject className;
 
     private boolean isInnerClassReference = false;
 
@@ -50,24 +50,24 @@ public class field {
      *
      * @param type the field type
      * @param name the field name
-     * @param classname the class name
+     * @param className the class name
      */
-    public field(fieldtype type, String name, stringobj classname) throws ValidityException {
+    public Field(FieldType type, String name, StringObject className) throws ValidityException {
         this.type = type;
         this.name = name;
-        this.classname = classname;
-        if(classname != null) {
-            validate(classname.value);
+        this.className = className;
+        if (className != null) {
+            validate(className.value);
         }
     }
 
     /**
      * Constructor for simple fields.
-     * 
+     *
      * @param type the field type
      * @param name the field name
      */
-    public field(fieldtype type, String name) throws ValidityException {
+    public Field(FieldType type, String name) throws ValidityException {
         this(type, name, null);
     }
 
@@ -78,34 +78,40 @@ public class field {
      * @throws IOException if a validity or I/O error occurs
      */
     public String getJavaType() throws IOException {
-        return jdeserialize.resolveJavaType(this.type, this.classname == null ? null : this.classname.value, true, false);
+        return JDeserialize.resolveJavaType(this.type, this.className == null ? null : this.className.value, true, false);
     }
-    
+
     /**
      * Changes the name of an object reference to the name specified.  This is used by
      * the inner-class-connection code to fix up field references.
-     * @param newname the fully-qualified class 
+     * @param name the fully qualified class
      * @throws ValidityException if the field isn't a reference type, or another
      * validity error occurs
      */
-    public void setReferenceTypeName(String newname) throws ValidityException {
-        if(this.type != fieldtype.OBJECT) {
+    public void setReferenceTypeName(String name) throws ValidityException {
+        if (this.type != FieldType.OBJECT) {
             throw new ValidityException("can't fix up a non-reference field!");
         }
-        String nname = "L" + newname.replace('.', '/') + ";";
-        this.classname.value = nname;
+        this.className.value = "L" + name.replace('.', '/') + ";";
     }
-    public void validate(String jt) throws ValidityException {
-        if(this.type == fieldtype.OBJECT) {
-            if(jt == null) {
+
+    /**
+     * Validates the class name for an object field type.
+     *
+     * @param name the class name to validate
+     * @throws ValidityException if the class name is invalid
+     */
+    public void validate(String name) throws ValidityException {
+        if (this.type == FieldType.OBJECT) {
+            if (name == null) {
                 throw new ValidityException("classname can't be null");
             }
-            if(jt.charAt(0) != 'L') {
-                throw new ValidityException("invalid object field type descriptor: " + classname.value);
+            if (name.charAt(0) != 'L') {
+                throw new ValidityException("invalid object field type descriptor: " + className.value);
             }
-            int end = jt.indexOf(';');
-            if(end == -1 || end != (jt.length()-1)) {
-                throw new ValidityException("invalid object field type descriptor (must end with semicolon): " + classname.value);
+            int end = name.indexOf(';');
+            if (end == -1 || end != (name.length() - 1)) {
+                throw new ValidityException("invalid object field type descriptor (must end with semicolon): " + className.value);
             }
         }
     }
