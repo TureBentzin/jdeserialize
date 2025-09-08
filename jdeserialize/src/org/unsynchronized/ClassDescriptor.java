@@ -197,12 +197,12 @@ public class ClassDescriptor extends Content {
      *
      * @param classes a list to be filled in with the hierarchy
      */
-    public void getHierarchy(ArrayList<ClassDescriptor> classes) {
+    public void getHierarchy(ArrayList<ClassDescriptor> classes, JDeserialize jd) {
         if (superClass != null) {
             if (superClass.descriptorType == ClassDescriptorType.PROXYCLASS) {
-                JDeserialize.debugerr("warning: hit a proxy class in superclass hierarchy");
+                jd.warn("hit a proxy class in superclass hierarchy");
             } else {
-                superClass.getHierarchy(classes);
+                superClass.getHierarchy(classes, jd);
             }
         }
         classes.add(this);

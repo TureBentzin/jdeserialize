@@ -62,7 +62,7 @@ public class ExceptionState extends Content {
                 if ((i % 16) == 0) {
                     stringBuilder.append(JDeserialize.lineSeparator).append(String.format("%7x: ", i));
                 }
-                stringBuilder.append(" ").append(JDeserialize.hexnoprefix(data[i]));
+                stringBuilder.append(" ").append(JDeserialize.hexNoPrefix(data[i]));
             }
             stringBuilder.append(JDeserialize.lineSeparator);
         }

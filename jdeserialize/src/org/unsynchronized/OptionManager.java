@@ -11,6 +11,7 @@ public class OptionManager {
     private List<String> fileArguments;
     private final Map<String, String> descriptions;
     private Map<String, List<String>> optionValues;
+    private final JDeserialize jdeserialize;
 
     public static class OptionParseException extends Exception {
         @Serial
@@ -48,15 +49,17 @@ public class OptionManager {
      * arguments to parse following the option.
      * @param descriptions Map of option descriptions.
      */
-    public OptionManager(Map<String, Integer> optionLength, Map<String, String> descriptions) {
+    public OptionManager(Map<String, Integer> optionLength, Map<String, String> descriptions, JDeserialize jdeserialize) {
         this.optionLength = optionLength;
         this.descriptions = descriptions;
+        this.jdeserialize = jdeserialize;
     }
 
     /**
      * Constructor.  
      */
-    public OptionManager() {
+    public OptionManager(JDeserialize jdeserialize) {
+        this.jdeserialize = jdeserialize;
         this.optionLength = new HashMap<>();
         this.descriptions = new HashMap<>();
     }
@@ -67,6 +70,9 @@ public class OptionManager {
      * @return true iff the argument was specified (with the correct number of arguments).
      */
     public boolean hasOption(String option) {
+        if (option.startsWith("-")) {
+            throw new IllegalArgumentException("option must not start with a dash"); // enforce new convention
+        }
         return optionValues.containsKey(option);
     }
 
@@ -90,6 +96,9 @@ public class OptionManager {
      * @param description description of the option
      */
     public void addOption(String option, int arguments, String description) {
+        if (option.startsWith("-")) {
+            throw new IllegalArgumentException("option must not start with a dash"); // enforce new convention
+        }
         optionLength.put(option, arguments);
         descriptions.put(option, description);
     }
@@ -105,8 +114,31 @@ public class OptionManager {
         this.optionValues = new HashMap<>();
 
         for (int i = 0; i < args.length; i++) {
-            Integer length = optionLength.get(args[i]);
-            if (length != null) {
+            String arg = args[i];
+            if (arg.startsWith("-")) {
+                Integer length = null;
+                // Attempt 1: direct match
+                if (arg.startsWith("--")) {
+                    length = optionLength.get(args[i].substring(2)); // a direct match is indicated by TWO leading dashes
+                }
+                if (length == null) {
+                    // Attempt 2: greedily match until just one option fits arg
+                    List<String> possibleMatches = new ArrayList<>(optionLength.keySet());
+                    for (int j = 1; j < arg.length() && possibleMatches.size() > 1; j++) {
+                        String sub = arg.substring(1, j + 1);
+                        possibleMatches.removeIf(opt -> !opt.startsWith(sub));
+                    }
+                    if (possibleMatches.size() == 1) {
+                        String match = possibleMatches.getFirst();
+                        length = optionLength.get(match);
+                        args[i] = match;
+                    } else if (possibleMatches.size() > 1) {
+                        throw new OptionParseException("ambiguous option: " + args[i] + " (could be any of " + possibleMatches + ")");
+                    }
+                }
+                if (length == null) {
+                    throw new OptionParseException("unknown option: " + args[i]);
+                }
                 ArrayList<String> argumentValues = new ArrayList<>(length);
                 for (int j = 0; j < length; j++) {
                     if (i + 1 + j >= args.length) {
@@ -122,9 +154,10 @@ public class OptionManager {
                     values.addAll(argumentValues);
                 }
                 i += length;
-                continue;
+            } else {
+                // it's a file argument
+                fileArguments.add(arg);
             }
-            fileArguments.add(args[i]);
         }
     }
 

@@ -84,6 +84,11 @@ public class JDeserialize implements Serializable {
     private int currentHandle;
     private boolean debugEnabled;
 
+    private PrintStream defaultOut = System.out;
+    private PrintStream debugOut = System.err;
+    private PrintStream errorOut = System.err;
+    private PrintStream warnOut = System.err;
+
     static {
         keywordSet = new HashSet<>();
         Collections.addAll(keywordSet, keywords);
@@ -152,7 +157,7 @@ public class JDeserialize implements Serializable {
                 sb.append("\\\"");
             }
             if (cp < 0x20 || cp > 0x7f) {
-                sb.append("\\u").append(hexnoprefix(4));
+                sb.append("\\u").append(hexNoPrefix(4));
             } else {
                 sb.appendCodePoint(cp);
             }
@@ -166,7 +171,7 @@ public class JDeserialize implements Serializable {
 
     public void readClassData(DataInputStream stream, Instance inst) throws IOException {
         ArrayList<ClassDescriptor> classes = new ArrayList<>();
-        inst.classDescriptor.getHierarchy(classes);
+        inst.classDescriptor.getHierarchy(classes, this);
         Map<ClassDescriptor, Map<Field, Object>> allData = new HashMap<>();
         Map<ClassDescriptor, List<IContent>> ann = new HashMap<>();
         for (ClassDescriptor cd : classes) {
@@ -531,7 +536,7 @@ public class JDeserialize implements Serializable {
             throw new ValidityException("can't find an entry for handle " + hex(handle));
         }
         IContent content = handles.get(handle);
-        debug("prevObject: handle " + hex(content.getHandle()) + " classdesc " + content);
+        debug("read prev object: handle %s classdesc %s", hex(content.getHandle()), content.toString());
         return content;
     }
 
@@ -575,7 +580,7 @@ public class JDeserialize implements Serializable {
             cd.annotations = read_classAnnotation(stream);
             cd.superClass = readClassDesc(stream);
             setHandle(handle, cd);
-            debug("read new classdesc: handle " + hex(handle) + " name " + name);
+            debug("read new classdesc: handle %s name %s", hex(handle), name);
             return cd;
         } else if (tc == ObjectStreamConstants.TC_NULL) {
             if (mustBeNew) {
@@ -610,7 +615,7 @@ public class JDeserialize implements Serializable {
             cd.superClass = readClassDesc(stream);
             setHandle(handle, cd);
             cd.name = "(proxy class; no name)";
-            debug("read new proxy classdesc: handle " + hex(handle) + " names [" + Arrays.toString(interfaces) + "]");
+            debug("read new proxy classdesc: handle %s names %s", hex(handle), Arrays.toString(interfaces));
             return cd;
         } else {
             throw new ValidityException("expected a valid class description starter got " + hex(tc));
@@ -620,7 +625,7 @@ public class JDeserialize implements Serializable {
     public ArrayObject readNewArray(DataInputStream stream) throws IOException {
         ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
-        debug("reading new array: handle " + hex(handle) + " classdesc " + cd.toString());
+        debug("reading new array: handle %s classdesc %s", hex(handle), cd.toString());
         if (cd.name.length() < 2) {
             throw new IOException("invalid name in array classdesc: " + cd.name);
         }
@@ -646,7 +651,7 @@ public class JDeserialize implements Serializable {
     public ClassObject readNewClass(DataInputStream stream) throws IOException {
         ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
-        debug("reading new class: handle " + hex(handle) + " classdesc " + cd.toString());
+        debug("reading new class: handle %s classdesc %s", hex(handle), cd.toString());
         ClassObject clazz = new ClassObject(handle, cd);
         setHandle(handle, clazz);
         return clazz;
@@ -658,7 +663,7 @@ public class JDeserialize implements Serializable {
             throw new IOException("enum classdesc can't be null!");
         }
         int handle = newHandle();
-        debug("reading new enum: handle " + hex(handle) + " classdesc " + cd);
+        debug("reading new enum: handle %s classdesc %s", hex(handle), cd.toString());
         byte tc = stream.readByte();
         StringObject stringObject = readNewString(tc, stream);
         cd.addEnum(stringObject.value);
@@ -688,7 +693,7 @@ public class JDeserialize implements Serializable {
                 throw new IOException("long string is too long: " + length);
             }
             if (length < 65536) {
-                debugerr("warning: small string length encoded as TC_LONGSTRING: " + length);
+                warn("small string length encoded as TC_LONGSTRING: %d", length);
             }
             data = new byte[(int) length];
         } else if (tc == ObjectStreamConstants.TC_NULL) {
@@ -697,10 +702,10 @@ public class JDeserialize implements Serializable {
             throw new IOException("invalid tc byte in string: " + hex(tc));
         }
         stream.readFully(data);
-        debug("reading new string: handle " + hex(handle) + " bufsz " + data.length);
-        StringObject sobj = new StringObject(handle, data);
-        setHandle(handle, sobj);
-        return sobj;
+        debug("reading new String: handle %s + size: $d", hex(handle), data.length);
+        StringObject string = new StringObject(handle, data);
+        setHandle(handle, string);
+        return string;
     }
 
     public BlockData readBlockdata(byte tc, DataInputStream stream) throws IOException {
@@ -717,20 +722,20 @@ public class JDeserialize implements Serializable {
         }
         byte[] data = new byte[size];
         stream.readFully(data);
-        debug("read blockdata of size " + size);
+        debug("read blockdata of size %d", size);
         return new BlockData(data);
     }
 
     public Instance readNewObject(DataInputStream stream) throws IOException {
         ClassDescriptor cd = readClassDesc(stream);
         int handle = newHandle();
-        debug("reading new object: handle " + hex(handle) + " classdesc " + cd.toString());
+        debug("reading new object: handle %s classdesc %s", hex(handle), cd.toString());
         Instance instance = new Instance();
         instance.classDescriptor = cd;
         instance.handle = handle;
         setHandle(handle, instance);
         readClassData(stream, instance);
-        debug("done reading object for handle " + hex(handle));
+        debug(" done reading object for handle %s", hex(handle));
         return instance;
     }
 
@@ -827,7 +832,7 @@ public class JDeserialize implements Serializable {
                     break;
                 }
                 IContent content = readContent(tc, stream, true);
-                System.out.println("read: " + content.toString());
+                defaultOut.println("read: " + content.toString());
                 if (content.isExceptionObject()) {
                     content = new ExceptionState(content, loggerStream.getRecordedData());
                 }
@@ -849,9 +854,9 @@ public class JDeserialize implements Serializable {
     }
 
     public void dump(OptionManager go) throws IOException {
-        if (go.hasOption("-blockdata") || go.hasOption("-blockdatamanifest")) {
-            List<String> blockData = go.getArguments("-blockdata");
-            List<String> blockDataManifest = go.getArguments("-blockdatamanifest");
+        if (go.hasOption("blockdata") || go.hasOption("blockdatamanifest")) {
+            List<String> blockData = go.getArguments("blockdata");
+            List<String> blockDataManifest = go.getArguments("blockdatamanifest");
             FileOutputStream outputStream = null, mos = null;
             PrintWriter writer = null;
             try {
@@ -865,7 +870,7 @@ public class JDeserialize implements Serializable {
                     writer.println("# an individual blockdata block written to the stream.");
                 }
                 for (IContent content : IContent) {
-                    System.out.println(content.toString());
+                    defaultOut.println(content.toString());
                     if (content instanceof BlockData bd) {
                         if (mos != null) {
                             writer.println(bd.buf.length);
@@ -891,19 +896,19 @@ public class JDeserialize implements Serializable {
                 }
             }
         }
-        if (!go.hasOption("-nocontent")) {
-            System.out.println("//// BEGIN stream content output");
+        if (!go.hasOption("nocontent")) {
+            defaultOut.println("//// BEGIN stream content output");
             for (IContent c : IContent) {
-                System.out.println(c.toString());
+                defaultOut.println(c.toString());
             }
-            System.out.println("//// END stream content output");
-            System.out.println();
+            defaultOut.println("//// END stream content output");
+            defaultOut.println();
         }
 
-        if (!go.hasOption("-noclasses")) {
-            boolean showArray = go.hasOption("-showarrays");
-            List<String> filter = go.getArguments("-filter");
-            System.out.println("//// BEGIN class declarations"
+        if (!go.hasOption("noclasses")) {
+            boolean showArray = go.hasOption("showarrays");
+            List<String> filter = go.getArguments("filter");
+            defaultOut.println("//// BEGIN class declarations"
                     + (showArray ? "" : " (excluding array classes)")
                     + ((filter != null && !filter.isEmpty())
                     ? " (exclusion filter " + filter.getFirst() + ")"
@@ -921,22 +926,22 @@ public class JDeserialize implements Serializable {
                     if (filter != null && !filter.isEmpty() && cl.name.matches(filter.getFirst())) {
                         continue;
                     }
-                    dumpClassDesc(0, cl, System.out, go.hasOption("-fixnames"));
-                    System.out.println();
+                    dumpClassDesc(0, cl, defaultOut, go.hasOption("fixnames"));
+                    defaultOut.println();
                 }
             }
-            System.out.println("//// END class declarations");
-            System.out.println();
+            defaultOut.println("//// END class declarations");
+            defaultOut.println();
         }
-        if (!go.hasOption("-noinstances")) {
-            System.out.println("//// BEGIN instance dump");
+        if (!go.hasOption("noinstances")) {
+            defaultOut.println("//// BEGIN instance dump");
             for (IContent c : handles.values()) {
                 if (c instanceof Instance instance) {
-                    dump_Instance(instance, System.out);
+                    dump_Instance(instance, defaultOut);
                 }
             }
-            System.out.println("//// END instance dump");
-            System.out.println();
+            defaultOut.println("//// END instance dump");
+            defaultOut.println();
         }
     }
 
@@ -1006,21 +1011,21 @@ public class JDeserialize implements Serializable {
                 if (!m.matches()) {
                     continue;
                 }
-                boolean islocal = false;
-                Matcher clmat = clpat.matcher(cd.name);
-                if (!clmat.matches()) {
+                boolean isLocal = false;
+                Matcher matcher = clpat.matcher(cd.name);
+                if (!matcher.matches()) {
                     throw new ValidityException("inner class enclosing-class reference field exists, but class name doesn't match expected pattern: class " + cd.name + " field " + f.name);
                 }
-                String outer = clmat.group(1), inner = clmat.group(2);
-                ClassDescriptor outercd = classes.get(outer);
-                if (outercd == null) {
+                String outer = matcher.group(1), inner = matcher.group(2);
+                ClassDescriptor outerCd = classes.get(outer);
+                if (outerCd == null) {
                     throw new ValidityException("couldn't connect inner classes: outer class not found for field name " + f.name);
                 }
-                if (!outercd.name.equals(f.getJavaType())) {
-                    throw new ValidityException("outer class field type doesn't match field type name: " + f.className.value + " outer class name " + outercd.name);
+                if (!outerCd.name.equals(f.getJavaType())) {
+                    throw new ValidityException("outer class field type doesn't match field type name: " + f.className.value + " outer class name " + outerCd.name);
                 }
-                outercd.addInnerClass(cd);
-                cd.setIsLocalInnerClass(islocal);
+                outerCd.addInnerClass(cd);
+                cd.setIsLocalInnerClass(isLocal);
                 cd.setIsInnerClass(true);
                 f.setIsInnerClassReference(true);
                 newNames.put(cd, inner);
@@ -1046,9 +1051,9 @@ public class JDeserialize implements Serializable {
             }
         }
         for (ClassDescriptor ncd : newNames.keySet()) {
-            String newname = newNames.get(ncd);
-            if (classnames.contains(newname)) {
-                throw new ValidityException("can't rename class from " + ncd.name + " to " + newname + " -- class already exists!");
+            String name = newNames.get(ncd);
+            if (classnames.contains(name)) {
+                throw new ValidityException("can't rename class from " + ncd.name + " to " + name + " -- class already exists!");
             }
             for (ClassDescriptor cd : classes.values()) {
                 if (cd.descriptorType == ClassDescriptorType.PROXYCLASS) {
@@ -1056,16 +1061,16 @@ public class JDeserialize implements Serializable {
                 }
                 for (Field f : cd.fields) {
                     if (f.getJavaType().equals(ncd.name)) {
-                        f.setReferenceTypeName(newname);
+                        f.setReferenceTypeName(name);
                     }
                 }
             }
-            if (classnames.remove(ncd.name) == false) {
+            if (!classnames.remove(ncd.name)) {
                 throw new ValidityException("tried to remove " + ncd.name + " from classnames cache, but couldn't find it!");
             }
-            ncd.name = newname;
-            if (classnames.add(newname) == false) {
-                throw new ValidityException("can't rename class to " + newname + " -- class already exists!");
+            ncd.name = name;
+            if (!classnames.add(name)) {
+                throw new ValidityException("can't rename class to " + name + " -- class already exists!");
             }
         }
     }
@@ -1090,11 +1095,11 @@ public class JDeserialize implements Serializable {
         return subs;
     }
 
-    public static String hexnoprefix(long value) {
-        return hexnoprefix(value, 2);
+    public static String hexNoPrefix(long value) {
+        return hexNoPrefix(value, 2);
     }
 
-    public static String hexnoprefix(long value, int length) {
+    public static String hexNoPrefix(long value, int length) {
         if (value < 0) {
             value = 256 + value;
         }
@@ -1106,65 +1111,132 @@ public class JDeserialize implements Serializable {
     }
 
     public static String hex(long value) {
-        return "0x" + hexnoprefix(value);
+        return "0x" + hexNoPrefix(value);
     }
 
-    public static void debugerr(String message) {
-        System.err.println(message);
+    public void info(String message) {
+        defaultOut.println(message);
     }
+
+    public void info(String format, Object... args) {
+        defaultOut.printf(format + "%n", args);
+    }
+
 
     public void debug(String message) {
         if (debugEnabled) {
-            System.out.println(message);
+            debugOut.println("[DEBUG]: " + message);
         }
     }
 
+    public void debug(String format, Object... args) {
+        if (debugEnabled) {
+            defaultOut.println("[DEBUG]: " + String.format(format, args));
+        }
+    }
+
+    public void warn(String message) {
+        warnOut.println("[WARNING]: " + message);
+    }
+
+    public void warn(String format, Object... args) {
+        warnOut.println("[WARNING]: " + String.format(format, args));
+    }
+
+    public void error(String message) {
+        errorOut.println("[ERROR]: " + message);
+    }
+
+    public void error(String format, Object... args) {
+        errorOut.println("[ERROR]: " + String.format(format, args));
+    }
+
+
     public static void main(String[] args) {
-        HashMap<String, Integer> options = new HashMap<>();
-        OptionManager go = new OptionManager();
-        go.addOption("-help", 0, "Show this list.");
-        go.addOption("-debug", 0, "Write debug info generated during parsing to stdout.");
-        go.addOption("-filter", 1, "Exclude classes that match the given String.matches() regex from class output.");
-        go.addOption("-nocontent", 0, "Don't output descriptions of the content in the stream.");
-        go.addOption("-noinstances", 0, "Don't output descriptions of every instance.");
-        go.addOption("-showarrays", 0, "Show array class declarations (e.g. int[]).");
-        go.addOption("-noconnect", 0, "Don't attempt to connect member classes to their enclosing classes.");
-        go.addOption("-fixnames", 0, "In class names, replace illegal Java identifier characters with legal ones.");
-        go.addOption("-noclasses", 0, "Don't output class declarations.");
-        go.addOption("-blockdata", 1, "Write raw blockdata out to the specified file.");
-        go.addOption("-blockdatamanifest", 1, "Write blockdata manifest out to the specified file.");
+        //TODO: figure out: JDeserialize jd = new JDeserialize(filename);
+        JDeserialize jd = new JDeserialize();
+        OptionManager go = getOptionManager(jd);
         try {
             go.parse(args);
+            jd.debugEnabled = go.hasOption("debug");
         } catch (OptionManager.OptionParseException ope) {
-            System.err.println("argument error: " + ope.getMessage());
-            System.out.println(go.getDescriptionString());
+            jd.error("argument error: %s", ope.getMessage());
+            jd.error(go.getDescriptionString());
             System.exit(1);
         }
-        if (go.hasOption("-help")) {
-            System.out.println(go.getDescriptionString());
+        if (go.hasOption("help")) {
+            jd.info(go.getDescriptionString());
             System.exit(1);
         }
         List<String> fargs = go.getFileArguments();
         if (fargs.isEmpty()) {
-            debugerr("args: [options] file1 [file2 .. fileN]");
-            System.err.println();
-            System.err.println(go.getDescriptionString());
+            jd.error("args: [options] file1 [file2 .. fileN]");
+            jd.error(go.getDescriptionString());
             System.exit(1);
         }
         for (String filename : fargs) {
             try (FileInputStream fis = new FileInputStream(filename)) {
-                //TODO: figure out: JDeserialize jd = new JDeserialize(filename);
-                JDeserialize jd = new JDeserialize();
-                jd.debugEnabled = go.hasOption("-debug");
-                jd.run(fis, !go.hasOption("-noconnect"));
+                jd.run(fis, !go.hasOption("noconnect"));
                 jd.dump(go);
             } catch (EOFException eoe) {
-                debugerr("EOF error while attempting to decode file " + filename + ": " + eoe.getMessage());
+                jd.error("EOF error while attempting to decode file '%s' : %s", filename, eoe.getMessage());
                 eoe.printStackTrace();
             } catch (IOException ioe) {
-                debugerr("error while attempting to decode file " + filename + ": " + ioe.getMessage());
+                jd.error("error while attempting to decode file '%s' : %s", filename, ioe.getMessage());
                 ioe.printStackTrace();
             }
         }
+    }
+
+    private static OptionManager getOptionManager(JDeserialize jd) {
+        OptionManager go = new OptionManager(jd);
+        go.addOption("help", 0, "Show this list.");
+        go.addOption("debug", 0, "Write debug info generated during parsing to stdout.");
+        go.addOption("filter", 1, "Exclude classes that match the given String.matches() regex from class output.");
+        go.addOption("nocontent", 0, "Don't output descriptions of the content in the stream.");
+        go.addOption("noinstances", 0, "Don't output descriptions of every instance.");
+        go.addOption("showarrays", 0, "Show array class declarations (e.g. int[]).");
+        go.addOption("noconnect", 0, "Don't attempt to connect member classes to their enclosing classes.");
+        go.addOption("fixnames", 0, "In class names, replace illegal Java identifier characters with legal ones.");
+        go.addOption("noclasses", 0, "Don't output class declarations.");
+        go.addOption("blockdata", 1, "Write raw blockdata out to the specified file.");
+        go.addOption("blockdatamanifest", 1, "Write blockdata manifest out to the specified file.");
+        return go;
+    }
+
+    public PrintStream getWarnOut() {
+        return warnOut;
+    }
+
+    public JDeserialize setWarnOut(PrintStream warnOut) {
+        this.warnOut = warnOut;
+        return this;
+    }
+
+    public PrintStream getErrorOut() {
+        return errorOut;
+    }
+
+    public JDeserialize setErrorOut(PrintStream errorOut) {
+        this.errorOut = errorOut;
+        return this;
+    }
+
+    public PrintStream getDebugOut() {
+        return debugOut;
+    }
+
+    public JDeserialize setDebugOut(PrintStream debugOut) {
+        this.debugOut = debugOut;
+        return this;
+    }
+
+    public PrintStream getDefaultOut() {
+        return defaultOut;
+    }
+
+    public JDeserialize setDefaultOut(PrintStream defaultOut) {
+        this.defaultOut = defaultOut;
+        return this;
     }
 }
