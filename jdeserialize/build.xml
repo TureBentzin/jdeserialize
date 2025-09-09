@@ -2,6 +2,7 @@
     <property name="build.dir" value="build" />
     <property name="src.dir" value="src" />
     <property name="javadoc.dir" value="javadoc" />
+    <property name="build.sysclasspath" value="ignore"/>
 
     <target name="default" depends="build-jar" />
 
