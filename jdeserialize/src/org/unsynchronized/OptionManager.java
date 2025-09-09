@@ -119,7 +119,8 @@ public class OptionManager {
                 Integer length = null;
                 // Attempt 1: direct match
                 if (arg.startsWith("--")) {
-                    length = optionLength.get(args[i].substring(2));
+                    length = optionLength.get(arg.substring(2));
+                    arg = arg.substring(2);
                 }
                 if (length == null) {
                     // Attempt 2: greedily match until just one option fits arg
@@ -131,25 +132,25 @@ public class OptionManager {
                     if (possibleMatches.size() == 1) {
                         String match = possibleMatches.getFirst();
                         length = optionLength.get(match);
-                        args[i] = match;
+                        arg = match;
                     } else if (possibleMatches.size() > 1) {
-                        throw new OptionParseException("ambiguous option '" + args[i] + "' (could be any of " + possibleMatches + ")");
+                        throw new OptionParseException("ambiguous option '" + arg + "' (could be any of " + possibleMatches + ")");
                     }
                 }
                 if (length == null) {
-                    throw new OptionParseException("unknown option: " + args[i]);
+                    throw new OptionParseException("unknown option: " + arg);
                 }
                 ArrayList<String> argumentValues = new ArrayList<>(length);
                 for (int j = 0; j < length; j++) {
                     if (i + 1 + j >= args.length) {
-                        throw new OptionParseException("expected " + length + " arguments after " + args[i]);
+                        throw new OptionParseException("expected " + length + " arguments after " + arg);
                     }
                     argumentValues.add(args[i + 1 + j]);
                 }
-                List<String> values = optionValues.get(args[i]);
+                List<String> values = optionValues.get(arg);
                 if (values == null) {
                     // create a new entry
-                    optionValues.put(args[i], argumentValues);
+                    optionValues.put(arg, argumentValues);
                 } else {
                     values.addAll(argumentValues);
                 }

@@ -1159,6 +1159,7 @@ public class JDeserialize implements Serializable {
         try {
             go.parse(args);
             jd.debugEnabled = go.hasOption("debug");
+            jd.debug("Parsed options: %s", go.getOptionValues());
         } catch (OptionManager.OptionParseException ope) {
             jd.error("argument error: %s", ope.getMessage());
             jd.error(go.getDescriptionString());
