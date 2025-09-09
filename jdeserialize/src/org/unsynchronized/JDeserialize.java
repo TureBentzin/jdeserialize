@@ -84,10 +84,10 @@ public class JDeserialize implements Serializable {
     private int currentHandle;
     private boolean debugEnabled;
 
-    private PrintStream defaultOut = System.out;
-    private PrintStream debugOut = System.err;
-    private PrintStream errorOut = System.err;
-    private PrintStream warnOut = System.err;
+    private transient PrintStream defaultOut = System.out;
+    private transient PrintStream debugOut = System.err;
+    private transient PrintStream errorOut = System.err;
+    private transient PrintStream warnOut = System.err;
 
     static {
         keywordSet = new HashSet<>();
