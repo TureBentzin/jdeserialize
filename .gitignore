@@ -7,3 +7,7 @@ javadoc/
 .direnv/
 *.secret
 *.bak
+
+### IDEA ###
+.idea
+*.iml
